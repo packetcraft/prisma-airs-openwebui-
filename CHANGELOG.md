@@ -58,6 +58,19 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v3.3] - 2026-03-08**
+
+### **Improved: Block Mode — Clearance Banner + Unified Report Format**
+
+* **Clearance Pending Banner**: After the inlet clears the prompt as safe, a persistent `done=False` status banner — *"⏳ Response pending security clearance — do not act on content yet"* — remains visible in the UI throughout the entire LLM generation phase, signalling to users that the response has not yet been security-cleared.
+* **Hard Scanning Banner in Outlet**: The outlet emits a second `done=False` status — *"🔍 Scanning response..."* — while the dual-pass scan runs after streaming ends, covering the scan latency window.
+* **Block Message Format Unified with Detection Mode**: The outlet block message now uses the same `Prompt: / Response: / DLP Patterns:` structure as detection mode, with `🚫 PRISMA AIRS BLOCK — \`category\`` header, replacing the old single-line redaction string.
+* **DLP Pattern Detail**: Added `get_dlp_pattern_summary()` — when `dlp: true` fires on the response, the block message includes the specific PII pattern names and hit counts from `response_masked_data`.
+* **Timeout and API Error Blocking**: Scan timeouts and API-level errors in the outlet now produce a blocking response instead of silently passing through.
+* **Architecture Note**: True visual obscuring of the streamed tokens during LLM generation is not achievable with a Filter outlet hook (which only runs after streaming completes). The persistent `done=False` status banners are the equivalent UX mechanism. A Pipe function would be required for full pre-clearance stream buffering.
+
+---
+
 ## **[v3.2] - 2026-03-07**
 
 ### **Refactored: Block Mode — Prompt-First Block + Dual-Pass Outlet**

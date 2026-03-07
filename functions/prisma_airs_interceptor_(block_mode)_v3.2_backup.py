@@ -1,23 +1,7 @@
 """
 title: Prisma AIRS Security Interceptor (Block Mode)
 author: Gemini
-version: 3.3
-
-Flow:
-  [INLET]  Scan prompt immediately.
-           → Risk detected : raise Exception — LLM never invoked.
-           → Safe          : emit persistent "⏳ clearance pending" banner
-                             that stays visible throughout LLM generation.
-
-  [OUTLET] After LLM finishes streaming, emit a hard "scanning" status
-           (done=False) while the dual-pass scan runs.
-           → Risk detected : OVERWRITE the full response with a block message.
-           → Safe          : response left unchanged, status cleared.
-
-Note: visually obscuring the *stream itself* while tokens are being generated
-is not possible with a Filter outlet hook — the outlet only runs after streaming
-is complete. True pre-clearance buffering requires a Pipe function. The
-persistent status banners (done=False) are the achievable UX equivalent.
+version: 3.2
 """
 
 import uuid
@@ -79,24 +63,10 @@ class Filter:
                 risks.append(label)
         return ", ".join(risks) if risks else "None Detected"
 
-    def get_dlp_pattern_summary(self, masked_data: dict) -> str:
-        """Extracts DLP pattern names and hit counts from response_masked_data."""
-        pattern_detections = masked_data.get("pattern_detections", [])
-        if not pattern_detections:
-            return ""
-        counts = {}
-        for detection in pattern_detections:
-            pattern = detection.get("pattern", "Unknown")
-            hits = len(detection.get("locations", []))
-            counts[pattern] = counts.get(pattern, 0) + hits
-        return ", ".join(f"{name} ({hits} hit{'s' if hits != 1 else ''})" for name, hits in counts.items())
-
     async def inlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """Scans the prompt immediately. Blocks the request if any risk is detected.
-        If safe, emits a persistent 'pending clearance' banner that remains visible
-        during the entire LLM generation phase."""
+        """Scans the prompt immediately. Blocks the request if any risk is detected."""
 
         if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
             if __event_emitter__:
@@ -152,30 +122,24 @@ class Filter:
 
                     raise Exception(f"🚫 PRISMA AIRS BLOCK — {risk_name}")
 
-            # Emit done=False so this banner stays visible throughout LLM generation
-            if __event_emitter__:
-                await __event_emitter__({
-                    "type": "status",
-                    "data": {"description": "⏳ Prisma AIRS: Response pending security clearance — do not act on content yet", "done": False},
-                })
-            return body
+            status = "✅ Prompt Safe — proceeding to LLM"
 
         except Exception as e:
             if "PRISMA AIRS BLOCK" in str(e):
                 raise e
-            if __event_emitter__:
-                await __event_emitter__({
-                    "type": "status",
-                    "data": {"description": f"Prisma AIRS: ❌ Scan Error: {str(e)}", "done": True},
-                })
-            return body
+            status = f"❌ Scan Error: {str(e)}"
+
+        if __event_emitter__:
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": f"Prisma AIRS: {status}", "done": True},
+            })
+        return body
 
     async def outlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """Dual-pass scan of prompt + response after LLM generation.
-        Overwrites the full response with a block message if any risk is detected.
-        Report format mirrors detection mode (Prompt / Response / DLP Patterns)."""
+        """Dual-pass scan of prompt + response. Overwrites the response if any risk is detected."""
 
         if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
             return body
@@ -183,7 +147,7 @@ class Filter:
         if __event_emitter__:
             await __event_emitter__({
                 "type": "status",
-                "data": {"description": "🔍 Prisma AIRS: Scanning response...", "done": False},
+                "data": {"description": "🔍 Prisma AIRS: Response Integrity Scan...", "done": False},
             })
 
         messages = body.get("messages", [])
@@ -216,55 +180,25 @@ class Filter:
             if response.status_code == 200:
                 data = response.json()
 
-                if data.get("timeout"):
-                    body["messages"][-1]["content"] = (
-                        "⚠️ **PRISMA AIRS BLOCK** — scan timed out\n"
-                        "Response blocked as a precaution. Please retry."
-                    )
-                    status = "⚠️ Scan Timeout — blocked for safety"
+                p_data = data.get("prompt_detected", {})
+                p_details = data.get("prompt_detection_details", {})
+                p_report = self.get_risk_description(p_data, p_details, self.PROMPT_FIELD_MAP)
 
-                elif data.get("error"):
-                    errors = data.get("errors", [])
-                    error_detail = ", ".join(str(e) for e in errors) if errors else "Unknown error"
-                    body["messages"][-1]["content"] = (
-                        f"❌ **PRISMA AIRS BLOCK** — API error during response scan\n"
-                        f"{error_detail}\n"
-                        "Response blocked as a precaution."
-                    )
-                    status = f"❌ API Error: {error_detail}"
+                r_data = data.get("response_detected", {})
+                r_details = data.get("response_detection_details", {})
+                r_report = self.get_risk_description(r_data, r_details, self.RESPONSE_FIELD_MAP)
 
+                is_risk = data.get("action") == "block" or any(p_data.values()) or any(r_data.values())
+
+                if is_risk:
+                    body["messages"][-1]["content"] = (
+                        f"🚫 **PRISMA AIRS BLOCK**\n"
+                        f"**Prompt:** {p_report}\n"
+                        f"**Response:** {r_report}"
+                    )
+                    status = f"🚫 Blocked at Response: {p_report if any(p_data.values()) else r_report}"
                 else:
-                    p_data = data.get("prompt_detected", {})
-                    p_details = data.get("prompt_detection_details", {})
-                    p_report = self.get_risk_description(p_data, p_details, self.PROMPT_FIELD_MAP)
-
-                    r_data = data.get("response_detected", {})
-                    r_details = data.get("response_detection_details", {})
-                    r_report = self.get_risk_description(r_data, r_details, self.RESPONSE_FIELD_MAP)
-
-                    is_risk = data.get("action") == "block" or any(p_data.values()) or any(r_data.values())
-
-                    if is_risk:
-                        api_category = data.get("category", "")
-                        category_label = f" — `{api_category}`" if api_category else ""
-
-                        dlp_line = ""
-                        masked_data = data.get("response_masked_data")
-                        if masked_data and r_data.get("dlp"):
-                            dlp_summary = self.get_dlp_pattern_summary(masked_data)
-                            if dlp_summary:
-                                dlp_line = f"\n**DLP Patterns:** {dlp_summary}"
-
-                        body["messages"][-1]["content"] = (
-                            f"🚫 **PRISMA AIRS BLOCK**{category_label}\n"
-                            f"**Prompt:** {p_report}\n"
-                            f"**Response:** {r_report}"
-                            f"{dlp_line}"
-                        )
-                        status = f"🚫 Blocked: {p_report if any(p_data.values()) else r_report}"
-
-                    else:
-                        status = "✅ Response Cleared"
+                    status = "✅ Response Safe"
 
             else:
                 status = f"⚠️ Scan Error: HTTP {response.status_code}"
