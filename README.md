@@ -21,7 +21,7 @@ If you are already familiar with Docker and Ollama, follow these three steps:
 
 1. **Pull the Model**: `ollama pull llama2-uncensored:latest`.
 2. **Launch WebUI**: Run the Open WebUI Docker container.
-3. **Install Filter**: Copy the code from `functions/prisma_airs_filter.py` into your Admin Panel.
+3. **Install Filter**: Copy the code from `functions/prisma_airs_interceptor_(monitor_mode).py` into your Admin Panel.
 
 **Detailed instructions can be found in the [Setup Guide](./docs/setup-guide.md).**
 
