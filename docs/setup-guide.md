@@ -85,10 +85,10 @@ Two filter modes are available. Choose based on how you want threats handled:
 
 | Mode | File | Behavior |
 | --- | --- | --- |
-| **Detection** | `prisma_airs_interceptor_(detection_mode).py` | Annotates messages with a warning banner. Prompts and responses still pass through. |
-| **Block** | `prisma_airs_interceptor_(block_mode).py` | Hard-blocks flagged prompts and fully redacts flagged responses. |
+| **Detector** | `prisma_airs_detector.py` | Annotates messages with a warning banner. Prompts and responses still pass through. |
+| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks flagged prompts and fully redacts flagged responses. |
 
-Start with **Detection** mode if you want to observe before enforcing.
+Start with **Detector** if you want to observe before enforcing.
 
 To install the filter:
 
@@ -97,7 +97,7 @@ To install the filter:
 3. **Configure Type**: In the top-right corner of the editor, click the dropdown and select **Filter**.
    *Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
 4. **Paste Code**: Clear the editor and paste the contents of your chosen file from `functions/`.
-5. **Name**: Give the function a name such as `prisma_airs_interceptor_detector` or `prisma_airs_interceptor_blocker`. You can use the same value for the description field.
+5. **Name**: Give the function a name such as `prisma_airs_detector` or `prisma_airs_enforcer`. You can use the same value for the description field.
 6. **Save**: Click **Save** in the bottom-right.
 
 ### **Step 4: Configure Credentials (Valves)**
@@ -132,7 +132,7 @@ The filter must be enabled in two places: globally (to activate it) and per mode
 **Part 1 — Enable globally:**
 
 1. Navigate to **Admin Panel > Functions** — or go to `http://localhost:3000/admin/functions`.
-2. Click the **toggle** next to your newly created filter (`prisma_airs_interceptor_detector` or `prisma_airs_interceptor_blocker`) to switch it **ON**.
+2. Click the **toggle** next to your newly created filter (`prisma_airs_detector` or `prisma_airs_enforcer`) to switch it **ON**.
 
 **Part 2 — Attach to a model:**
 
@@ -141,7 +141,7 @@ The filter must be enabled in two places: globally (to activate it) and per mode
 3. **Configure the model**:
    - **Name**: Enter `myChat-airs-monitored` (or any name you prefer).
    - **Base Model**: Select `llama2-uncensored` from the dropdown.
-   - **Filter**: Select your `prisma_airs_interceptor_*` function using the selector.
+   - **Filter**: Select your `prisma_airs_detector` or `prisma_airs_enforcer` function using the selector.
 4. Click **Save and update** at the very bottom.
 5. Click the `myChat-airs-monitored` model you just created to open a chat session.
 6. The chat interface appears — you are now protected by Prisma AIRS.
@@ -150,7 +150,7 @@ The filter must be enabled in two places: globally (to activate it) and per mode
 
 ## **Phase 3: Verification & Testing**
 
-> The expected behavior below reflects **Detection mode**. In **Block mode**, flagged prompts are hard-blocked before reaching the model instead of being annotated, and flagged responses are fully replaced with a redaction notice.
+> The expected behavior below reflects **Detector**. In **Enforcer**, flagged prompts are hard-blocked before reaching the model instead of being annotated, and flagged responses are fully replaced with a redaction notice.
 
 ### **Test 1: Prompt Injection (Input Security)**
 

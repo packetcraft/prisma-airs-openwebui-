@@ -22,10 +22,10 @@ Two filter functions are available depending on how strictly you want to enforce
 
 | Mode | File | Behavior |
 | --- | --- | --- |
-| **Detection** | `prisma_airs_interceptor_(detection_mode).py` | Flags threats by annotating the message with a warning banner. The prompt and response still pass through. Good for visibility and testing. |
-| **Block** | `prisma_airs_interceptor_(block_mode).py` | Hard-blocks the message if a threat is detected. Flagged prompts never reach the model; flagged responses are fully redacted. Use for active enforcement. |
+| **Detector** | `prisma_airs_detector.py` | Flags threats by annotating the message with a warning banner. The prompt and response still pass through. Good for visibility and testing. |
+| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks the message if a threat is detected. Flagged prompts never reach the model; flagged responses are fully redacted. Use for active enforcement. |
 
-Start with Detection mode if you want to observe behavior before enforcing. Switch to Block mode when you're ready to enforce.
+Start with Detector if you want to observe behavior before enforcing. Switch to Enforcer when you're ready to enforce.
 
 ---
 

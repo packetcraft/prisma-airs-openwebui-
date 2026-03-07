@@ -1,5 +1,5 @@
 """
-title: Prisma AIRS Security Interceptor (Block Mode)
+title: Prisma AIRS Enforcer
 author: Gemini
 version: 3.3
 

@@ -4,7 +4,7 @@ This folder stores real JSON responses captured from the Prisma AIRS API. They a
 
 ## How to add a sample
 
-1. Trigger the detection scenario in Open WebUI with the diagnostic filter (`prisma_airs_diagnosis_scan.py`) active.
+1. Trigger the detection scenario in Open WebUI with the Diagnostics filter (`prisma_airs_diagnostics.py`) active.
 2. Copy the **Raw API Response (JSON)** block from the chat output.
 3. Save it as a `.json` file in this folder using the naming convention below.
 

@@ -1,5 +1,5 @@
 """
-title: Prisma AIRS Security Interceptor (Full Diagnostic + Raw JSON)
+title: Prisma AIRS Diagnostics
 author: Gemini
 version: 4.5
 """

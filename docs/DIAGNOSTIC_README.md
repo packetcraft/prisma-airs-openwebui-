@@ -35,7 +35,7 @@ This version of the interceptor is a specialized **Diagnostic Tool** designed fo
 
 ## ⚙️ Setup Instructions
 
-1. **File**: Use `functions/prisma_airs_diagnosis_scan.py` (v4.3) from this repository.
+1. **File**: Use `functions/prisma_airs_diagnostics.py` from this repository.
 2. **Installation**: Follow the standard [Setup Guide](./setup-guide.md) to add the function to Open WebUI.
 3. **Configuration**: Enter your `x-pan-token` and `AI_PROFILE_NAME` in the function Valves.
 4. **Enable**: Toggle this specific filter **ON** for your research models in **Workspace > Models**.
@@ -44,4 +44,4 @@ This version of the interceptor is a specialized **Diagnostic Tool** designed fo
 
 ## ⚠️ Safety Warning
 
-**This mode is strictly for testing and research purposes.** Because it does not redact sensitive data or block malicious payloads, it should only be used in isolated research environments. For production use or general user access, please switch to the **[Blocking Mode v3.1](../README.md)** version of this script.
+**This mode is strictly for testing and research purposes.** Because it does not redact sensitive data or block malicious payloads, it should only be used in isolated research environments. For production use or general user access, please switch to the **[Enforcer](../README.md)** version of this script.

@@ -8,9 +8,9 @@ Three filter functions are provided, each targeting a different use case:
 
 | Filter | File | Purpose |
 | --- | --- | --- |
-| **Detection Mode** | `prisma_airs_interceptor_(detection_mode).py` | Flags threats by appending a compact security alert to the response. Prompt and response always pass through. |
-| **Block Mode** | `prisma_airs_interceptor_(block_mode).py` | Hard-blocks prompts before they reach the LLM; overwrites flagged responses with a block message. |
-| **Diagnostic Mode** | `prisma_airs_diagnosis_scan.py` | Full diagnostic report with raw API JSON appended. For security testing and development. |
+| **Detector** | `prisma_airs_detector.py` | Flags threats by appending a compact security alert to the response. Prompt and response always pass through. |
+| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks prompts before they reach the LLM; overwrites flagged responses with a block message. |
+| **Diagnostics** | `prisma_airs_diagnostics.py` | Full diagnostic report with raw API JSON appended. For security testing and development. |
 
 ---
 
@@ -25,7 +25,7 @@ Both hooks can emit status events visible in the chat UI via `__event_emitter__`
 
 ---
 
-## Detection Mode — Request Flow
+## Detector — Request Flow
 
 ### v2.6 (previous)
 
@@ -105,7 +105,7 @@ User sends prompt
 
 ---
 
-## Block Mode — Request Flow
+## Enforcer — Request Flow
 
 ### v3.2 (previous)
 
@@ -185,7 +185,7 @@ The user never sees the unchecked content. This is the correct architecture for 
 
 ---
 
-## Diagnostic Mode — Request Flow (v4.5)
+## Diagnostics — Request Flow (v4.5)
 
 ```
 User sends prompt
@@ -238,9 +238,9 @@ All three filters use separate `PROMPT_FIELD_MAP` and `RESPONSE_FIELD_MAP` to ma
 
 ---
 
-## Block Message Format (Detection and Block Mode)
+## Alert / Block Message Format (Detector and Enforcer)
 
-Both modes use a consistent compact format. Detection mode **appends**; block mode **overwrites**.
+Both filters use a consistent compact format. Detector **appends**; Enforcer **overwrites**.
 
 ```
 🚨 / 🚫  PRISMA AIRS SECURITY ALERT / BLOCK — `<api_category>`

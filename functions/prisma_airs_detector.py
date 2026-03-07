@@ -1,5 +1,5 @@
 """
-title: Prisma AIRS Security Interceptor (Detection Mode)
+title: Prisma AIRS Detector
 author: Gemini
 author_url: https://docs.paloaltonetworks.com/ai-runtime-security/
 version: 2.7
