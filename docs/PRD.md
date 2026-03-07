@@ -140,7 +140,7 @@ User sends prompt
       │
       │ safe ↓
       ▼
-[INLET] "⏳ Response pending security clearance — do not act on content yet"
+[INLET] "💬 LLM generating response — Prisma AIRS scan will follow"
       │                                    ← done=False banner stays visible
       ▼
 [LLM STREAMING] tokens appear in chat window
@@ -159,7 +159,7 @@ User sends prompt
       ▼  "✅ Response Cleared" — original response left untouched
 ```
 
-**Key difference from v3.2:** The persistent `done=False` inlet banner provides a visual hold signal throughout the entire LLM generation phase, indicating the response has not yet been security-cleared.
+**Key difference from v3.2:** The persistent `done=False` inlet banner shows the LLM is generating and that a security scan will follow — making clear the LLM is the active process, not AIRS.
 
 ---
 

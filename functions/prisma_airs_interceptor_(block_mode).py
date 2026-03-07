@@ -6,7 +6,7 @@ version: 3.3
 Flow:
   [INLET]  Scan prompt immediately.
            → Risk detected : raise Exception — LLM never invoked.
-           → Safe          : emit persistent "⏳ clearance pending" banner
+           → Safe          : emit "💬 LLM generating response" banner
                              that stays visible throughout LLM generation.
 
   [OUTLET] After LLM finishes streaming, emit a hard "scanning" status
@@ -95,8 +95,8 @@ class Filter:
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
         """Scans the prompt immediately. Blocks the request if any risk is detected.
-        If safe, emits a persistent 'pending clearance' banner that remains visible
-        during the entire LLM generation phase."""
+        If safe, emits a persistent banner indicating the LLM is generating,
+        which remains visible throughout the LLM generation phase."""
 
         if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
             if __event_emitter__:
@@ -156,7 +156,7 @@ class Filter:
             if __event_emitter__:
                 await __event_emitter__({
                     "type": "status",
-                    "data": {"description": "⏳ Prisma AIRS: Response pending security clearance — do not act on content yet", "done": False},
+                    "data": {"description": "💬 LLM generating response — Prisma AIRS scan will follow", "done": False},
                 })
             return body
 
