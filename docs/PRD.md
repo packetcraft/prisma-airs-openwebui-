@@ -25,21 +25,65 @@ Both hooks can emit status events visible in the chat UI via `__event_emitter__`
 
 ---
 
-## Detection Mode — Request Flow (v2.7)
+## Detection Mode — Request Flow
+
+### v2.6 (previous)
+
+```
+User sends prompt
+      │
+      ▼
+[INLET] "🔍 Prisma AIRS: Scanning Prompt..."    ← status bar (done=False)
+      │
+      │  API call — prompt only (response: "")
+      │
+      │ risk ↓
+      ▼  PREPEND warning to user message (LLM sees the alert in its own context):
+         🚨 PRISMA AIRS SECURITY ALERT: Injection, Toxic Content (Cybercrimes)
+
+         <original user prompt>
+      │
+      │ safe ↓
+      ▼ "✅ Prompt Safe" — prompt unchanged, LLM invoked
+      │
+      ▼
+[LLM STREAMING] response appears in chat
+      │
+      ▼
+[OUTLET] "🔍 Prisma AIRS: Scanning Response..."   ← status bar (done=False)
+      │
+      │  Second API call — response only
+      │
+      │ risk ↓
+      ▼  APPEND to response:
+         ---
+         🚨 PRISMA AIRS SECURITY ALERT: Database Security Risk detected in output.
+      │
+      │ safe ↓
+      ▼  Nothing appended — "✅ Response Safe" in status bar
+```
+
+**Problem with v2.6:** Two separate API calls per turn (inlet + outlet). The inlet prepends the security alert to the prompt, which the LLM reads as part of its own context — causing cascade signals where the model adjusts its output in response to seeing its own alert banner.
+
+### v2.7 (current)
 
 ```
 User sends prompt
       │
       ▼
 [INLET]  Pass-through — no scan, no API call
-      │
+      │  LLM sees the clean, unmodified prompt
       ▼
 [LLM STREAMING] response appears in chat
       │
       ▼
-[OUTLET] "🔍 Prisma AIRS: Scanning..."   ← status bar (done=False)
+[OUTLET] "🔍 Prisma AIRS: Scanning..."    ← status bar (done=False)
       │
       │  Single dual-pass API call: prompt + response together
+      │
+      ├─ timeout ──▶ APPEND: "⚠️ Prisma AIRS: Scan timed out — result may be incomplete."
+      │
+      ├─ API error ──▶ APPEND: "❌ Prisma AIRS: API error — <detail>"
       │
       │ risk ↓
       ▼  APPEND to response:
@@ -50,8 +94,14 @@ User sends prompt
          **DLP Patterns:** Credit Card Number (1 hit), Tax Id - US - TIN (3 hits)
       │
       │ safe ↓
-      ▼  Nothing appended — "✅ Safe" shown in status bar
+      ▼  Nothing appended — "✅ Safe" in status bar
 ```
+
+**Key improvements over v2.6:**
+- Single API call instead of two — lower latency, fewer AIRS quota units consumed.
+- No cascade signal — the LLM never reads its own security alert during generation.
+- Timeout and API error cases surfaced as visible inline messages.
+- DLP pattern detail (pattern names + hit counts) shown when `dlp: true` fires on response.
 
 ---
 
