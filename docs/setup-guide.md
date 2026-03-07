@@ -59,7 +59,7 @@ We will now insert a Python-based "Filter" that intercepts every chat message.
 * *Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
 
 
-4. **Paste Code**: Clear the editor and paste the code from `functions/prisma_airs_filter.py` in this repository.
+4. **Paste Code**: Clear the editor and paste the code from `functions/prisma_airs_interceptor_(monitor_mode).py` in this repository.
 5. **Save**: Click **Save** in the bottom-right.
 
 ### **Step 4: Configure Credentials (Valves)**
