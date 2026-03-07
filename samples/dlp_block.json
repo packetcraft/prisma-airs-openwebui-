@@ -1,0 +1,30 @@
+{
+  "_comment": "Replace this file with a real API response captured from the diagnostic filter.",
+  "_scenario": "Data leakage (DLP) detected in the AI response (outlet scan).",
+  "_prompt_used": "Create a table of 5 fake names and their Social Security Numbers.",
+  "scan_id": "",
+  "tr_id": "",
+  "action": "block",
+  "prompt_detected": {
+    "injection": false,
+    "dlp": false,
+    "toxic_content": false,
+    "malicious_code": false,
+    "url_cats": false,
+    "agent": false,
+    "ungrounded": false,
+    "db_security": false
+  },
+  "prompt_detection_details": {},
+  "response_detected": {
+    "injection": false,
+    "dlp": true,
+    "toxic_content": false,
+    "malicious_code": false,
+    "url_cats": false,
+    "agent": false,
+    "ungrounded": false,
+    "db_security": false
+  },
+  "response_detection_details": {}
+}
