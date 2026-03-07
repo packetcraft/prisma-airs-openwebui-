@@ -68,6 +68,21 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v2.6] - 2026-03-07**
+
+### **Improved: Detection Mode — Sample-Driven Corrections**
+
+* **Asymmetric Field Maps**: Replaced the single combined field map with separate `PROMPT_FIELD_MAP` (`injection`, `agent`, `dlp`, `toxic_content`, `malicious_code`, `url_cats`) and `RESPONSE_FIELD_MAP` (`dlp`, `toxic_content`, `malicious_code`, `url_cats`, `db_security`, `ungrounded`) matching the actual API schema.
+* **Toxic Category Inline Formatting**: Toxic categories now render inline (e.g. *Toxic Content (Cybercrimes)*) instead of appearing as a floating comma-separated item.
+* **Response Detection Details**: `response_detection_details` is now passed when building the outlet alert, so toxic categories are correctly shown for response-side detections.
+* **DLP Pattern Detail in Outlet**: When `dlp: true` fires on the response, the alert now appends the specific PII pattern names and hit counts extracted from `response_masked_data`.
+* **Credential Validation**: Early check on `PRISMA_API_KEY` and `AI_PROFILE_NAME` — emits a clear status error if either is unconfigured instead of failing silently.
+* **Default Valve Values**: Changed `"xxxxx"` placeholder defaults to `""` with proper field descriptions.
+* **Removed Unused Import**: Removed `Optional` from the `typing` import.
+* **Timeout + tr_id**: Bumped timeout from 10s → 15s; tr_id length from 8 → 12 chars (consistent with diagnosis scan).
+
+---
+
 ## **[v2.1] - 2026-03-05**
 
 ### **Added: Enhanced Detection Mode**
