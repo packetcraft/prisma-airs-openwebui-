@@ -45,8 +45,8 @@ Open WebUI provides a ChatGPT-like interface and a powerful "Functions" engine.
 ```bash
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
 ```
-- **-p 3000:8080**: Maps the web interface to `http://localhost:3000`.
-- **--add-host**: Allows the Docker container to talk to Ollama running on your Mac.
+    -p 3000:8080: Maps the web interface to `http://localhost:3000`.
+    --add-host: Allows the Docker container to talk to Ollama running on your Mac.
 
   
 ✅ Verification & Validation
@@ -57,7 +57,7 @@ Follow these steps to confirm the interface is live and connected to your local 
 2. **Verify Web Access:** Open your browser and go to `http://localhost:3000`. You should see the login/sign-up page.
   
 3. **Confirm Ollama Connection:** * After logging in, click the **Model Selection** dropdown at the top center.
-  - **Success Criteria:** You should see `llama2-uncensored:latest` appearing in the list.
+    - **Success Criteria:** You should see `llama2-uncensored:latest` appearing in the list.
   
 4. **Perform an "Unmonitored" Chat Test:**
     - Select the model and type: `What is the capital of France?`
@@ -76,8 +76,7 @@ We will now insert a Python-based "Filter" that intercepts every chat message.
 1. **Navigate**: In Open WebUI, click your **Profile Name** (bottom-left) > **Admin Panel** > **Functions**.
 2. **Create**: Click the **+ (Plus)** button to create a new function.
 3. **Configure Type**: In the top-right corner, click the dropdown and select **Filter**.
-* *Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
-
+*Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
 
 4. **Paste Code**: Clear the editor and paste the code from `functions/prisma_airs_interceptor_(monitor_mode).py` in this repository.
 5. **Save**: Click **Save** in the bottom-right.
@@ -105,8 +104,7 @@ We will now insert a Python-based "Filter" that intercepts every chat message.
     * API Key Token: This token is generated during the onboarding process in Strata Cloud Manager (see the onboarding prerequisite step above). Include the API key token in all API requests using the 'x-pan-token' header.
     * AI Security Profile Name: This is the API security profile you created during the onboarding process in Strata Cloud Manager (see the prerequisite step on creating an API security profile above). Specify this profile name or the profile ID in the API request payload in the 'ai_profile' field.
     
-
-  For complete details, refer to adminstration guide for the section on how to "manage applications, API Keys, security profiles, and custom topics". [refer doc:](https://pan.dev/prisma-airs/api/airuntimesecurity/airuntimesecurityapi/)
+    For complete details, refer to adminstration guide for the section on how to "manage applications, API Keys, security profiles, and custom topics". [refer doc:](https://pan.dev/prisma-airs/api/airuntimesecurity/airuntimesecurityapi/)
 
 ### **Step 5: Enable Monitoring for Your Model**
 
