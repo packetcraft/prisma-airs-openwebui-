@@ -1,5 +1,5 @@
 """
-title: Prisma AIRS Diagnostics
+title: Prisma AIRS Diagnostics (Full Diagnostic + Raw JSON)
 author: Gemini
 version: 4.5
 """
