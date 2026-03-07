@@ -1,12 +1,11 @@
 """
-title: Prisma AIRS Security Interceptor (Blocking Mode)
+title: Prisma AIRS Security Interceptor (Blocking + Deep Mapping)
 author: Gemini
-version: 3.0
+version: 3.1
 """
 
 import uuid
 from typing import Awaitable, Callable, Optional
-
 import requests
 import urllib3
 from pydantic import BaseModel, Field
@@ -20,28 +19,51 @@ class Filter:
         PRISMA_API_URL: str = Field(
             default="https://service.api.aisecurity.paloaltonetworks.com/v1/scan/sync/request"
         )
-        PRISMA_API_KEY: str = Field(default="", description="Your x-pan-token")
+        PRISMA_API_KEY: str = Field(
+            default="xxx",
+            description="Your x-pan-token",
+        )
         AI_PROFILE_NAME: str = Field(
-            default="", description="Your AI Profile Name from Strata"
+            default="xxx", description="Your AI Profile Name from Strata"
         )
 
     def __init__(self):
         self.valves = self.Valves()
 
-    def get_risk_description(self, detection_data: dict) -> str:
+    def get_risk_description(self, detection_data: dict, details: dict = None) -> str:
+        """Enhanced risk mapper based on official AIRS JSON schema."""
         risks = []
-        if detection_data.get("dlp"):
-            risks.append("Data Leakage (DLP)")
+
+        # Mapping prompt_detected and response_detected fields
         if detection_data.get("injection"):
             risks.append("Prompt Injection")
+        if detection_data.get("dlp"):
+            risks.append("Sensitive Data (DLP)")
+        if detection_data.get("toxic_content"):
+            risks.append("Toxic/Hateful Content")
+        if detection_data.get("malicious_code"):
+            risks.append("Malicious Code")
         if detection_data.get("url_cats"):
-            risks.append("Malicious URL")
+            risks.append("Unsafe URL/Link")
+        if detection_data.get("agent"):
+            risks.append("Agent Abuse")
+        if detection_data.get("ungrounded"):
+            risks.append("Hallucination/Ungrounded")
+        if detection_data.get("db_security"):
+            risks.append("Database Security")
+
+        # Extract granular toxic categories if present (per provided JSON)
+        if details and "toxic_content_details" in details:
+            cats = details["toxic_content_details"].get("toxic_categories", [])
+            if cats:
+                risks.append(f"({', '.join(cats)})")
+
         return ", ".join(risks) if risks else "Policy Violation"
 
     async def inlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """Blocks the prompt BEFORE it reaches the AI if a risk is detected."""
+        """HARD BLOCK: Prevents malicious prompts from ever reaching the local AI."""
         if __event_emitter__:
             await __event_emitter__(
                 {
@@ -80,10 +102,11 @@ class Filter:
             if response.status_code == 200:
                 data = response.json()
                 prompt_risks = data.get("prompt_detected", {})
+                details = data.get("prompt_detection_details", {})
 
-                # Logic Change: If Prisma says 'block' or detects a specific threat
+                # Logic: If 'action' is 'block' or ANY security bit is set to true
                 if data.get("action") == "block" or any(prompt_risks.values()):
-                    risk_name = self.get_risk_description(prompt_risks)
+                    risk_name = self.get_risk_description(prompt_risks, details)
 
                     if __event_emitter__:
                         await __event_emitter__(
@@ -96,16 +119,16 @@ class Filter:
                             }
                         )
 
-                    # HARD BLOCK: Raising an Exception stops the message from going to Ollama
+                    # Raise Exception to stop the request pipeline immediately
                     raise Exception(
-                        f"Prisma AIRS Security Block: {risk_name} detected."
+                        f"PRISMA AIRS BLOCK: {risk_name} detected in your request."
                     )
 
             status = "✅ Prompt Safe"
         except Exception as e:
-            if "Security Block" in str(e):
-                raise e  # Pass security block through
-            status = f"❌ Error: {str(e)}"
+            if "PRISMA AIRS BLOCK" in str(e):
+                raise e
+            status = f"❌ Scan Error: {str(e)}"
 
         if __event_emitter__:
             await __event_emitter__(
@@ -119,22 +142,21 @@ class Filter:
     async def outlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """Intercepts the response and redacts it if sensitive data is leaked."""
+        """REDACTION: Overwrites leaking or toxic AI responses before they are displayed."""
         if __event_emitter__:
             await __event_emitter__(
                 {
                     "type": "status",
                     "data": {
-                        "description": "🔍 Prisma AIRS: Scanning Response...",
+                        "description": "🔍 Prisma AIRS: Response Integrity Scan...",
                         "done": False,
                     },
                 }
             )
 
         messages = body.get("messages", [])
-        ai_res, user_prompt = (
-            messages[-1].get("content", ""),
-            (messages[-2].get("content", "") if len(messages) > 1 else ""),
+        ai_res, user_prompt = messages[-1].get("content", ""), (
+            messages[-2].get("content", "") if len(messages) > 1 else ""
         )
 
         try:
@@ -166,15 +188,15 @@ class Filter:
 
                 if data.get("action") == "block" or any(res_risks.values()):
                     risk_name = self.get_risk_description(res_risks)
-                    # REDACTION: Replace the leaked content with a warning
-                    body["messages"][-1]["content"] = (
-                        f"⚠️ **SECURITY BLOCK:** The model response was blocked/redacted due to {risk_name}."
-                    )
-                    status = f"🚨 {risk_name} Redacted"
+                    # REDACT the response content
+                    body["messages"][-1][
+                        "content"
+                    ] = f"🚨 **PRISMA AIRS REDACTION:** This response was blocked due to {risk_name}."
+                    status = f"🚩 Risk: {risk_name}"
                 else:
                     status = "✅ Response Safe"
         except Exception:
-            status = "❌ Scan Error"
+            status = "❌ Integrity Scan Failed"
 
         if __event_emitter__:
             await __event_emitter__(
