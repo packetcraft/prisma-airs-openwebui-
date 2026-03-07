@@ -58,6 +58,20 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v3.2] - 2026-03-07**
+
+### **Refactored: Block Mode — Prompt-First Block + Dual-Pass Outlet**
+
+* **Inlet Hard Block**: Prompt is scanned immediately before reaching the LLM. If any risk is detected, the request pipeline is terminated with a `raise Exception` and the LLM is never invoked.
+* **Outlet Dual-Pass Block**: After the LLM responds, a single API call scans both the original prompt and the AI response together. If either side triggers a risk, the full response is **overwritten** with a compact block message showing `**Prompt:**` and `**Response:**` findings.
+* **Asymmetric Field Maps**: Separated into `PROMPT_FIELD_MAP` and `RESPONSE_FIELD_MAP` matching the actual API schema — response-side detections now correctly use `db_security` and `ungrounded` instead of prompt-only fields.
+* **Toxic Category Inline Formatting**: Toxic categories now render inline (e.g. *Toxic Content (Cybercrimes)*) instead of floating as a separate item.
+* **Response Detection Details**: `response_detection_details` is now passed when building the outlet block message so toxic categories appear correctly for response-side detections.
+* **Credential Validation**: Early check on `PRISMA_API_KEY` and `AI_PROFILE_NAME` with clear status message if unconfigured.
+* **Timeout + tr_id**: Bumped timeout from 10s → 15s; tr_id length from 8 → 12 chars.
+
+---
+
 ## **[v3.1] - 2026-03-06**
 
 ### **Added: Active Blocking Mode**

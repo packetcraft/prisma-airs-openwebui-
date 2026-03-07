@@ -1,7 +1,7 @@
 """
-title: Prisma AIRS Security Interceptor (Blocking + Deep Mapping)
+title: Prisma AIRS Security Interceptor (Block Mode)
 author: Gemini
-version: 3.1
+version: 3.2
 """
 
 import uuid
@@ -10,7 +10,6 @@ import requests
 import urllib3
 from pydantic import BaseModel, Field
 
-# Disables warnings for insecure connections (-k flag equivalent)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -21,59 +20,67 @@ class Filter:
         )
         PRISMA_API_KEY: str = Field(
             default="",
-            description="Your x-pan-token",
+            description="Your x-pan-token API Key",
         )
         AI_PROFILE_NAME: str = Field(
-            default="", description="Your AI Profile Name from Strata"
+            default="", description="The AI Security Profile name from Strata Cloud Manager"
         )
 
     def __init__(self):
         self.valves = self.Valves()
 
-    def get_risk_description(self, detection_data: dict, details: dict = None) -> str:
-        """Enhanced risk mapper based on official AIRS JSON schema."""
+    # Prompt-only fields (injection and agent are not present in response_detected)
+    PROMPT_FIELD_MAP = {
+        "injection": "Prompt Injection",
+        "agent": "Agent System Abuse",
+        "dlp": "Sensitive Data (DLP)",
+        "toxic_content": "Toxic Content",
+        "malicious_code": "Malicious Code",
+        "url_cats": "Unsafe URL",
+    }
+
+    # Response-only fields (db_security and ungrounded are not present in prompt_detected)
+    RESPONSE_FIELD_MAP = {
+        "dlp": "Sensitive Data (DLP)",
+        "toxic_content": "Toxic Content",
+        "malicious_code": "Malicious Code",
+        "url_cats": "Unsafe URL",
+        "db_security": "Database Security Risk",
+        "ungrounded": "Hallucination/Ungrounded",
+    }
+
+    def get_risk_description(self, detection_data: dict, details: dict = None, field_map: dict = None) -> str:
+        """Maps API detection flags to a readable string using the correct field map."""
+        if field_map is None:
+            field_map = self.PROMPT_FIELD_MAP
         risks = []
-
-        # Mapping prompt_detected and response_detected fields
-        if detection_data.get("injection"):
-            risks.append("Prompt Injection")
-        if detection_data.get("dlp"):
-            risks.append("Sensitive Data (DLP)")
-        if detection_data.get("toxic_content"):
-            risks.append("Toxic/Hateful Content")
-        if detection_data.get("malicious_code"):
-            risks.append("Malicious Code")
-        if detection_data.get("url_cats"):
-            risks.append("Unsafe URL/Link")
-        if detection_data.get("agent"):
-            risks.append("Agent Abuse")
-        if detection_data.get("ungrounded"):
-            risks.append("Hallucination/Ungrounded")
-        if detection_data.get("db_security"):
-            risks.append("Database Security")
-
-        # Extract granular toxic categories if present (per provided JSON)
-        if details and "toxic_content_details" in details:
-            cats = details["toxic_content_details"].get("toxic_categories", [])
-            if cats:
-                risks.append(f"({', '.join(cats)})")
-
-        return ", ".join(risks) if risks else "Policy Violation"
+        for key, label in field_map.items():
+            if detection_data.get(key):
+                if key == "toxic_content" and details:
+                    cats = details.get("toxic_content_details", {}).get("toxic_categories", [])
+                    if cats:
+                        label = f"Toxic Content ({', '.join(cats)})"
+                risks.append(label)
+        return ", ".join(risks) if risks else "None Detected"
 
     async def inlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """HARD BLOCK: Prevents malicious prompts from ever reaching the local AI."""
-        if __event_emitter__:
-            await __event_emitter__(
-                {
+        """Scans the prompt immediately. Blocks the request if any risk is detected."""
+
+        if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
+            if __event_emitter__:
+                await __event_emitter__({
                     "type": "status",
-                    "data": {
-                        "description": "🔍 Prisma AIRS: Security Check...",
-                        "done": False,
-                    },
-                }
-            )
+                    "data": {"description": "⚠️ Prisma AIRS: API key or profile name not configured in Valves.", "done": True}
+                })
+            return body
+
+        if __event_emitter__:
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": "🔍 Prisma AIRS: Scanning Prompt...", "done": False},
+            })
 
         user_msg = body["messages"][-1].get("content", "")
         try:
@@ -88,76 +95,64 @@ class Filter:
                     "app_user": "local-user",
                 },
                 "contents": [{"prompt": user_msg, "response": ""}],
-                "tr_id": str(uuid.uuid4())[:8],
+                "tr_id": str(uuid.uuid4())[:12],
                 "ai_profile": {"profile_name": self.valves.AI_PROFILE_NAME.strip()},
             }
             response = requests.post(
                 self.valves.PRISMA_API_URL,
                 json=payload,
                 headers=headers,
-                timeout=10,
+                timeout=15,
                 verify=False,
             )
 
             if response.status_code == 200:
                 data = response.json()
                 prompt_risks = data.get("prompt_detected", {})
-                details = data.get("prompt_detection_details", {})
+                prompt_details = data.get("prompt_detection_details", {})
 
-                # Logic: If 'action' is 'block' or ANY security bit is set to true
                 if data.get("action") == "block" or any(prompt_risks.values()):
-                    risk_name = self.get_risk_description(prompt_risks, details)
+                    risk_name = self.get_risk_description(prompt_risks, prompt_details, self.PROMPT_FIELD_MAP)
 
                     if __event_emitter__:
-                        await __event_emitter__(
-                            {
-                                "type": "status",
-                                "data": {
-                                    "description": f"❌ Blocked: {risk_name}",
-                                    "done": True,
-                                },
-                            }
-                        )
+                        await __event_emitter__({
+                            "type": "status",
+                            "data": {"description": f"🚫 Blocked at Prompt: {risk_name}", "done": True},
+                        })
 
-                    # Raise Exception to stop the request pipeline immediately
-                    raise Exception(
-                        f"PRISMA AIRS BLOCK: {risk_name} detected in your request."
-                    )
+                    raise Exception(f"🚫 PRISMA AIRS BLOCK — {risk_name}")
 
-            status = "✅ Prompt Safe"
+            status = "✅ Prompt Safe — proceeding to LLM"
+
         except Exception as e:
             if "PRISMA AIRS BLOCK" in str(e):
                 raise e
             status = f"❌ Scan Error: {str(e)}"
 
         if __event_emitter__:
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {"description": f"Prisma AIRS: {status}", "done": True},
-                }
-            )
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": f"Prisma AIRS: {status}", "done": True},
+            })
         return body
 
     async def outlet(
         self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
     ) -> dict:
-        """REDACTION: Overwrites leaking or toxic AI responses before they are displayed."""
+        """Dual-pass scan of prompt + response. Overwrites the response if any risk is detected."""
+
+        if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
+            return body
+
         if __event_emitter__:
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {
-                        "description": "🔍 Prisma AIRS: Response Integrity Scan...",
-                        "done": False,
-                    },
-                }
-            )
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": "🔍 Prisma AIRS: Response Integrity Scan...", "done": False},
+            })
 
         messages = body.get("messages", [])
-        ai_res, user_prompt = messages[-1].get("content", ""), (
-            messages[-2].get("content", "") if len(messages) > 1 else ""
-        )
+        ai_res = messages[-1].get("content", "")
+        user_prompt = messages[-2].get("content", "") if len(messages) > 1 else ""
 
         try:
             headers = {
@@ -171,38 +166,49 @@ class Filter:
                     "app_user": "local-user",
                 },
                 "contents": [{"prompt": user_prompt, "response": ai_res}],
-                "tr_id": str(uuid.uuid4())[:8],
+                "tr_id": str(uuid.uuid4())[:12],
                 "ai_profile": {"profile_name": self.valves.AI_PROFILE_NAME.strip()},
             }
             response = requests.post(
                 self.valves.PRISMA_API_URL,
                 json=payload,
                 headers=headers,
-                timeout=10,
+                timeout=15,
                 verify=False,
             )
 
             if response.status_code == 200:
                 data = response.json()
-                res_risks = data.get("response_detected", {})
 
-                if data.get("action") == "block" or any(res_risks.values()):
-                    risk_name = self.get_risk_description(res_risks)
-                    # REDACT the response content
-                    body["messages"][-1][
-                        "content"
-                    ] = f"🚨 **PRISMA AIRS REDACTION:** This response was blocked due to {risk_name}."
-                    status = f"🚩 Risk: {risk_name}"
+                p_data = data.get("prompt_detected", {})
+                p_details = data.get("prompt_detection_details", {})
+                p_report = self.get_risk_description(p_data, p_details, self.PROMPT_FIELD_MAP)
+
+                r_data = data.get("response_detected", {})
+                r_details = data.get("response_detection_details", {})
+                r_report = self.get_risk_description(r_data, r_details, self.RESPONSE_FIELD_MAP)
+
+                is_risk = data.get("action") == "block" or any(p_data.values()) or any(r_data.values())
+
+                if is_risk:
+                    body["messages"][-1]["content"] = (
+                        f"🚫 **PRISMA AIRS BLOCK**\n"
+                        f"**Prompt:** {p_report}\n"
+                        f"**Response:** {r_report}"
+                    )
+                    status = f"🚫 Blocked at Response: {p_report if any(p_data.values()) else r_report}"
                 else:
                     status = "✅ Response Safe"
-        except Exception:
-            status = "❌ Integrity Scan Failed"
+
+            else:
+                status = f"⚠️ Scan Error: HTTP {response.status_code}"
+
+        except Exception as e:
+            status = f"❌ Integrity Scan Failed: {str(e)}"
 
         if __event_emitter__:
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {"description": f"Prisma AIRS: {status}", "done": True},
-                }
-            )
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": f"Prisma AIRS: {status}", "done": True},
+            })
         return body
