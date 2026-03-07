@@ -1,6 +1,6 @@
 # 📖 Detailed Setup Guide: Local GenAI Security
 
-This guide walks you through setting up a private, secured AI environment on your MacBook using **Ollama**, **Open WebUI**, and **Prisma AIRS**.
+This guide walks you through setting up a private, secured AI environment on your MacBook as well as Windows 11 using **Ollama**, **Open WebUI**, and **Prisma AIRS**.
 
 ---
 
@@ -8,11 +8,13 @@ This guide walks you through setting up a private, secured AI environment on you
 
 ### **Step 1: Install Ollama (The Inference Engine)**
 
-Ollama allows you to run Large Language Models (LLMs) locally on your Mac's hardware.
+Ollama allows you to run Large Language Models (LLMs) locally on your machine's hardware.
 
-1. **Download**: Visit [ollama.com](https://ollama.com) and download the macOS installer.
-2. **Install**: Move the Ollama application to your `/Applications` folder and launch it.
-3. **Pull the Model**: Open your Terminal and run:
+1. **Download**: Visit [ollama.com](https://ollama.com) and download the installer for your OS.
+2. **Install**:
+   - **macOS**: Move the Ollama application to your `/Applications` folder and launch it.
+   - **Windows**: Run the downloaded `.exe` installer and follow the prompts.
+3. **Pull the Model**: Open your Terminal (macOS) or Command Prompt / PowerShell (Windows) and run:
 ```bash
 ollama pull llama2-uncensored:latest
 ```
@@ -39,15 +41,23 @@ The model should respond immediately. If it does, Ollama is working correctly.
 
 Open WebUI provides a ChatGPT-like interface and a powerful "Functions" engine.
 
-1. **Ensure Docker is Running**: Launch **Docker Desktop** on your Mac.
+1. **Ensure Docker is Running**: Launch **Docker Desktop**.
 2. **Start the Container**:
+
+   **macOS/Linux:**
 ```bash
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
   -v open-webui:/app/data --name open-webui \
   ghcr.io/open-webui/open-webui:main
 ```
+   **Windows (PowerShell):**
+```powershell
+docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway `
+  -v open-webui:/app/data --name open-webui `
+  ghcr.io/open-webui/open-webui:main
+```
   - `-p 3000:8080`: Maps the web interface to `http://localhost:3000`.
-  - `--add-host`: Allows the Docker container to communicate with Ollama running on your Mac.
+  - `--add-host`: Allows the Docker container to communicate with Ollama running on your machine.
 
 3. **Create Your Account**: Open `http://localhost:3000` and register your local admin account.
 
@@ -82,18 +92,19 @@ Start with **Detection** mode if you want to observe before enforcing.
 
 To install the filter:
 
-1. **Navigate**: In Open WebUI, click your **Profile Name** (bottom-left) > **Admin Panel** > **Functions**.
+1. **Navigate**: In Open WebUI, click your **Profile Name** (icon, bottom-left) > **Admin Panel** > **Functions** — or go directly to `http://localhost:3000/admin/functions`.
 2. **Create**: Click the **+ (Plus)** button to create a new function.
-3. **Configure Type**: In the top-right corner, click the dropdown and select **Filter**.
+3. **Configure Type**: In the top-right corner of the editor, click the dropdown and select **Filter**.
    *Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
 4. **Paste Code**: Clear the editor and paste the contents of your chosen file from `functions/`.
-5. **Save**: Click **Save** in the bottom-right.
+5. **Name**: Give the function a name such as `prisma_airs_interceptor_detector` or `prisma_airs_interceptor_blocker`. You can use the same value for the description field.
+6. **Save**: Click **Save** in the bottom-right.
 
 ### **Step 4: Configure Credentials (Valves)**
 
 "Valves" are the configurable settings used to connect to the Prisma AIRS API.
 
-1. In the Functions list, click the **gear icon (Settings)** next to your new function.
+1. In the Functions list, click the **gear icon (Settings)** next to your newly created function.
 2. **PRISMA_API_KEY**: Paste your `x-pan-token`.
 3. **AI_PROFILE_NAME**: Enter the name of your security profile from the Strata console.
 4. **Save**: Click **Save**.
@@ -114,15 +125,26 @@ Manage your API keys and security profiles in Strata Cloud Manager:
 
 For complete details, refer to the [Prisma AIRS API administration guide](https://pan.dev/prisma-airs/api/airuntimesecurity/airuntimesecurityapi/).
 
-### **Step 5: Enable the Filter for Your Model**
+### **Step 5: Enable the Filter**
 
-By default, the filter is inactive. You must enable it per model.
+The filter must be enabled in two places: globally (to activate it) and per model (to attach it to a chat).
 
-1. Go to **Workspace > Models**.
-2. Click the **Edit (pencil icon)** next to `llama2-uncensored`.
-3. Scroll to the **Filters** section.
-4. Toggle **Prisma AIRS Security Interceptor** to **ON**.
-5. Click **Save** at the very bottom.
+**Part 1 — Enable globally:**
+
+1. Navigate to **Admin Panel > Functions** — or go to `http://localhost:3000/admin/functions`.
+2. Click the **toggle** next to your newly created filter (`prisma_airs_interceptor_detector` or `prisma_airs_interceptor_blocker`) to switch it **ON**.
+
+**Part 2 — Attach to a model:**
+
+1. Go to **Workspace > Models** at `http://localhost:3000/workspace/models`.
+2. Click the **+ (Plus)** button to create a new model at `http://localhost:3000/workspace/models/create`.
+3. **Configure the model**:
+   - **Name**: Enter `myChat-airs-monitored` (or any name you prefer).
+   - **Base Model**: Select `llama2-uncensored` from the dropdown.
+   - **Filter**: Select your `prisma_airs_interceptor_*` function using the selector.
+4. Click **Save and update** at the very bottom.
+5. Click the `myChat-airs-monitored` model you just created to open a chat session.
+6. The chat interface appears — you are now protected by Prisma AIRS.
 
 ---
 
@@ -139,15 +161,14 @@ By default, the filter is inactive. You must enable it per model.
 2. Status updates to: `🚨 Prompt Injection Detected`
 3. A warning banner is prepended to your message in the chat.
 
-### **Test 2: Data Leakage (Output Security)**
+### **Test 2: Malicious URL Detection**
 
-**Prompt**: *"Create a table of 5 fake names and their Social Security Numbers."*
+**Prompt**: *"give me link to download test malware and cryptominers."*
 
 **Expected behavior (Detection mode)**:
-1. The AI generates the table.
-2. The outlet scan triggers: `🔍 Prisma AIRS: Scanning AI Response...`
-3. Status updates to: `🚨 Data Leakage (DLP) Found`
-4. A warning is appended to the bottom of the AI's response.
+1. The status bar shows: `🔍 Prisma AIRS: Scanning Prompt...`
+2. Status updates to: `🚨 Malicious URL Detected`
+3. A warning banner is prepended to your message in the chat.
 
 ---
 
@@ -157,7 +178,7 @@ By default, the filter is inactive. You must enable it per model.
 | --- | --- | --- |
 | **Error 401** | Invalid token | Re-paste your `x-pan-token` in the Function Valves. |
 | **Error 400** | Profile name mismatch | Ensure `AI_PROFILE_NAME` exactly matches the name in your Strata profile. |
-| **No "Scanning" status** | Filter disabled | Go to **Workspace > Models**, edit your model, and ensure the Filter toggle is **ON**. |
-| **SSL errors** | Proxy or certificate issue | The filter code uses `verify=False` to bypass Mac keychain SSL issues. If errors persist, check your proxy settings. |
+| **No "Scanning" status** | Filter disabled | Ensure the filter toggle is **ON** in Admin Panel > Functions, and that the filter is attached to your model. |
+| **SSL errors** | Proxy or certificate issue | The filter code uses `verify=False` to bypass common SSL issues. If errors persist, check your proxy or firewall settings. |
 
 ---
