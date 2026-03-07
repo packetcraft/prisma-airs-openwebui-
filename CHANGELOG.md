@@ -68,6 +68,18 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v2.7] - 2026-03-07**
+
+### **Refactored: Detection Mode — Dual-Pass Outlet Logic**
+
+* **Inlet Pass-Through**: `inlet` no longer makes an API call. Scanning is deferred to `outlet` where both prompt and response are available, eliminating the LLM cascade signal problem (where the AI reads its own pre-response security banner and adjusts its output).
+* **Single Dual-Pass Scan**: `outlet` sends prompt and response together in one API call — matching the approach used by the diagnostic scan.
+* **Compact Alert Format**: When risks are detected, appends a concise banner showing `**Prompt:**` and `**Response:**` findings inline, with DLP pattern details on a separate line if applicable. Nothing is appended when the scan is clean.
+* **Timeout and API Error Handling**: Scan timeouts and API-level errors are now surfaced as visible inline messages rather than failing silently.
+* **API Category Label**: The API's top-level `category` field (`malicious` / `benign`) is shown in the alert header.
+
+---
+
 ## **[v2.6] - 2026-03-07**
 
 ### **Improved: Detection Mode — Sample-Driven Corrections**

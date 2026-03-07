@@ -2,7 +2,7 @@
 title: Prisma AIRS Security Interceptor (Detection Mode)
 author: Gemini
 author_url: https://docs.paloaltonetworks.com/ai-runtime-security/
-version: 2.7
+version: 2.6
 """
 
 import requests
@@ -60,7 +60,7 @@ class Filter:
                     if cats:
                         label = f"Toxic Content ({', '.join(cats)})"
                 risks.append(label)
-        return ", ".join(risks) if risks else "None Detected"
+        return ", ".join(risks) if risks else "Unknown Risk"
 
     def get_dlp_pattern_summary(self, masked_data: dict) -> str:
         """Extracts DLP pattern names and hit counts from response_masked_data."""
@@ -74,13 +74,10 @@ class Filter:
             counts[pattern] = counts.get(pattern, 0) + hits
         return ", ".join(f"{name} ({hits} hit{'s' if hits != 1 else ''})" for name, hits in counts.items())
 
-    async def inlet(self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
-        """Pass-through — scanning is deferred to outlet after the LLM response is available."""
-        return body
-
-    async def outlet(self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
-        """Dual-pass scan of prompt + response. Appends a compact alert when risks are detected."""
-
+    async def inlet(
+        self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
+    ) -> dict:
+        """Scans the user prompt and prepends a warning banner if risks are detected."""
         if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
             if __event_emitter__:
                 await __event_emitter__({
@@ -92,7 +89,70 @@ class Filter:
         if __event_emitter__:
             await __event_emitter__({
                 "type": "status",
-                "data": {"description": "🔍 Prisma AIRS: Scanning...", "done": False}
+                "data": {"description": "🔍 Prisma AIRS: Scanning Prompt...", "done": False},
+            })
+
+        user_msg = body["messages"][-1].get("content", "")
+        try:
+            headers = {
+                "x-pan-token": self.valves.PRISMA_API_KEY.strip(),
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "metadata": {
+                    "ai_model": body.get("model"),
+                    "app_name": "Open WebUI",
+                    "app_user": "local-user",
+                },
+                "contents": [{"prompt": user_msg, "response": ""}],
+                "tr_id": str(uuid.uuid4())[:12],
+                "ai_profile": {"profile_name": self.valves.AI_PROFILE_NAME.strip()},
+            }
+
+            response = requests.post(
+                self.valves.PRISMA_API_URL,
+                json=payload,
+                headers=headers,
+                timeout=15,
+                verify=False,
+            )
+            status = "✅ Prompt Safe"
+
+            if response.status_code == 200:
+                data = response.json()
+                prompt_risks = data.get("prompt_detected", {})
+                prompt_details = data.get("prompt_detection_details", {})
+
+                if data.get("action") == "block" or any(prompt_risks.values()):
+                    risk_name = self.get_risk_description(prompt_risks, prompt_details, self.PROMPT_FIELD_MAP)
+                    body["messages"][-1]["content"] = (
+                        f"🚨 **PRISMA AIRS SECURITY ALERT:** {risk_name}\n\n" + user_msg
+                    )
+                    status = f"🚩 Risk: {risk_name}"
+            else:
+                status = f"⚠️ API Error {response.status_code}"
+
+        except Exception as e:
+            status = f"❌ Connection Error: {str(e)}"
+
+        if __event_emitter__:
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": f"Prisma AIRS: {status}", "done": True},
+            })
+        return body
+
+    async def outlet(
+        self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None
+    ) -> dict:
+        """Scans the AI response and appends a warning banner if risks are detected."""
+        if not self.valves.PRISMA_API_KEY.strip() or not self.valves.AI_PROFILE_NAME.strip():
+            return body
+
+        if __event_emitter__:
+            await __event_emitter__({
+                "type": "status",
+                "data": {"description": "🔍 Prisma AIRS: Scanning Response...", "done": False},
             })
 
         messages = body.get("messages", [])
@@ -102,13 +162,13 @@ class Filter:
         try:
             headers = {
                 "x-pan-token": self.valves.PRISMA_API_KEY.strip(),
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
             payload = {
                 "metadata": {
-                    "ai_model": body.get("model", "unknown"),
+                    "ai_model": body.get("model"),
                     "app_name": "Open WebUI",
-                    "app_user": "local-user"
+                    "app_user": "local-user",
                 },
                 "contents": [{"prompt": user_prompt, "response": ai_res}],
                 "tr_id": str(uuid.uuid4())[:12],
@@ -120,71 +180,39 @@ class Filter:
                 json=payload,
                 headers=headers,
                 timeout=15,
-                verify=False
+                verify=False,
             )
+            status = "✅ Response Safe"
 
             if response.status_code == 200:
                 data = response.json()
+                res_risks = data.get("response_detected", {})
+                res_details = data.get("response_detection_details", {})
 
-                if data.get("timeout"):
+                if data.get("action") == "block" or any(res_risks.values()):
+                    risk_name = self.get_risk_description(res_risks, res_details, self.RESPONSE_FIELD_MAP)
+
+                    # Add DLP pattern details when available
+                    masked_data = data.get("response_masked_data")
+                    dlp_detail = ""
+                    if masked_data and res_risks.get("dlp"):
+                        summary = self.get_dlp_pattern_summary(masked_data)
+                        if summary:
+                            dlp_detail = f" — Patterns: {summary}"
+
                     body["messages"][-1]["content"] += (
-                        "\n\n---\n"
-                        "⚠️ **PRISMA AIRS:** Scan timed out — result may be incomplete."
+                        f"\n\n---\n🚨 **PRISMA AIRS SECURITY ALERT:** {risk_name} detected in output.{dlp_detail}"
                     )
-                    status = "⚠️ Scan Timed Out"
-
-                elif data.get("error"):
-                    errors = data.get("errors", [])
-                    error_detail = ", ".join(str(e) for e in errors) if errors else "Unknown error"
-                    body["messages"][-1]["content"] += (
-                        "\n\n---\n"
-                        f"❌ **PRISMA AIRS:** API error — {error_detail}"
-                    )
-                    status = f"❌ API Error: {error_detail}"
-
-                else:
-                    p_data = data.get("prompt_detected", {})
-                    p_details = data.get("prompt_detection_details", {})
-                    p_report = self.get_risk_description(p_data, p_details, self.PROMPT_FIELD_MAP)
-
-                    r_data = data.get("response_detected", {})
-                    r_details = data.get("response_detection_details", {})
-                    r_report = self.get_risk_description(r_data, r_details, self.RESPONSE_FIELD_MAP)
-
-                    is_risk = data.get("action") == "block" or any(p_data.values()) or any(r_data.values())
-
-                    if is_risk:
-                        api_category = data.get("category", "")
-                        category_label = f" — `{api_category}`" if api_category else ""
-
-                        dlp_line = ""
-                        masked_data = data.get("response_masked_data")
-                        if masked_data and r_data.get("dlp"):
-                            dlp_summary = self.get_dlp_pattern_summary(masked_data)
-                            if dlp_summary:
-                                dlp_line = f"\n**DLP Patterns:** {dlp_summary}"
-
-                        body["messages"][-1]["content"] += (
-                            f"\n\n---\n"
-                            f"🚨 **PRISMA AIRS SECURITY ALERT**{category_label}\n"
-                            f"**Prompt:** {p_report}\n"
-                            f"**Response:** {r_report}"
-                            f"{dlp_line}"
-                        )
-                        status = f"🚩 Risk Detected: {p_report if any(p_data.values()) else r_report}"
-                    else:
-                        status = "✅ Safe"
-
+                    status = f"🚩 Risk: {risk_name}"
             else:
-                status = f"⚠️ Scan Error: HTTP {response.status_code}"
+                status = f"⚠️ Scan Error {response.status_code}"
 
         except Exception as e:
-            status = f"❌ Analysis Error: {str(e)}"
+            status = f"❌ Scan Error: {str(e)}"
 
         if __event_emitter__:
             await __event_emitter__({
                 "type": "status",
-                "data": {"description": f"Prisma AIRS: {status}", "done": True}
+                "data": {"description": f"Prisma AIRS: {status}", "done": True},
             })
-
         return body
