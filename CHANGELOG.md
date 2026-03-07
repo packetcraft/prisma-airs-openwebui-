@@ -4,6 +4,14 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v4.5] - 2026-03-07**
+
+### **Fixed: Toxic Category Inline Formatting**
+
+* **Inline Category Labels**: Toxic categories now render inline with the `Toxic Content` label (e.g. *Toxic Content (Cybercrimes, Misconduct)*) instead of appearing as a separate comma-separated item after it.
+
+---
+
 ## **[v4.4] - 2026-03-07**
 
 ### **Improved: Diagnosis Scan — Sample-Driven Enhancements**

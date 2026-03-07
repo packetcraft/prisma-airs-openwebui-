@@ -1,7 +1,7 @@
 """
 title: Prisma AIRS Security Interceptor (Full Diagnostic + Raw JSON)
 author: Gemini
-version: 4.4
+version: 4.5
 """
 
 import uuid
@@ -55,13 +55,11 @@ class Filter:
 
         for key, label in field_map.items():
             if detection_data.get(key):
+                if key == "toxic_content" and details:
+                    cats = details.get("toxic_content_details", {}).get("toxic_categories", [])
+                    if cats:
+                        label = f"Toxic Content ({', '.join(cats)})"
                 active_risks.append(label)
-
-        # Pull granular toxic categories from details
-        if details and "toxic_content_details" in details:
-            cats = details["toxic_content_details"].get("toxic_categories", [])
-            if cats:
-                active_risks.append(f"({', '.join(cats)})")
 
         return ", ".join(active_risks) if active_risks else "None Detected"
 
