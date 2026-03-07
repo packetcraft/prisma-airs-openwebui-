@@ -1,16 +1,37 @@
-## **[v4.3] - 2026-03-07**
+# Changelog
 
-> *(v4.2 — add release notes here)*
+All notable changes to this project are documented here, organised by version and date.
 
 ---
 
+## **[v4.4] - 2026-03-07**
 
+### **Improved: Diagnosis Scan — Sample-Driven Enhancements**
+
+* **DLP Pattern Detail**: The diagnostic report now extracts and displays specific PII pattern names and hit counts from `response_masked_data` (e.g. *National Id - US SSN (4 hits), Credit Card Number (1 hit)*) instead of the generic "Data Leakage (DLP)" label.
+* **Accurate Field Mapping**: Separated `prompt_detected` and `response_detected` into two distinct field maps matching the actual asymmetric API schema confirmed by real scan samples. `injection` and `agent` are prompt-only; `db_security` and `ungrounded` are response-only.
+* **Timeout Handling**: Scan results where `timeout: true` are now flagged as unreliable in the report rather than silently reported as SAFE.
+* **API Error Surfacing**: `error` and `errors` fields are now checked and displayed in the report when the API returns an error state.
+* **Report ID**: Both `scan_id` and `report_id` are now shown in the report header for full Strata console cross-referencing.
+* **API Category Label**: The API's top-level `category` field (`malicious` / `benign`) is now shown alongside the verdict.
+* **Tool Detection**: `tool_detected` is now shown in the report when non-empty, covering agent/tool abuse scenarios.
+* **Credential Validation**: Early check on `PRISMA_API_KEY` and `AI_PROFILE_NAME` — emits a clear error message in the UI if either is unconfigured, instead of a cryptic HTTP 401.
+
+---
+
+## **[v4.3] - 2026-03-07**
 
 ### **Added: Full Diagnostic & Raw JSON Mode**
 
 * **Raw JSON Inspection**: Integrated a Markdown code block at the end of every response to show the complete, original Prisma AIRS API JSON for debugging.
 * **Diagnostic Split**: The report now explicitly separates findings into **[1] Prompt Detected** and **[2] Response Detected** to mirror the API schema.
 * **Scan ID Correlation**: Added the unique `scan_id` to the UI footer to allow auditors to cross-reference local hits with the Prisma Cloud (Strata) console.
+
+---
+
+## **[v4.2] - 2026-03-07**
+
+> *(add release notes here)*
 
 ---
 
@@ -25,7 +46,7 @@
 
 ## **[v4.0] - 2026-03-07**
 
-> *(v4.0 — add release notes here)*
+> *(add release notes here)*
 
 ---
 
