@@ -21,7 +21,17 @@ Ollama allows you to run Large Language Models (LLMs) locally on your Mac's hard
 ollama pull llama2-uncensored:latest
 
 ```
+✅ Verification & Validation
+Before moving to the next step, run these two commands in your terminal to ensure Ollama is functioning as expected:
 
+1. Check Model Readiness: Run ollama list. You should see llama2-uncensored listed under the "NAME" column.
+
+2. Test Live Inference: Run the following command to send a quick test prompt:
+
+```Bash
+ollama run llama2-uncensored "Hello, are you running locally?"
+```
+- Success Criteria: The model should respond immediately. Because this is the "uncensored" version, it will answer without the standard safety filters found in models like GPT-4, which is exactly what we need for our upcoming security tests.
 
 * *Note: We use the "uncensored" version to test if our security filters can catch dangerous content that the model itself might not block.*
 
@@ -37,11 +47,26 @@ Open WebUI provides a ChatGPT-like interface and a powerful "Functions" engine.
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
 
 ```
+cc
+  * **-p 3000:8080**: Maps the web interface to `http://localhost:3000`.
+  * **--add-host**: Allows the Docker container to talk to Ollama running on your Mac.
 
-
-* **-p 3000:8080**: Maps the web interface to `http://localhost:3000`.
-* **--add-host**: Allows the Docker container to talk to Ollama running on your Mac.
-
+  ✅ Verification & Validation
+  Follow these steps to confirm the interface is live and connected to your local model:
+  
+  1. **Check Container Status:** Run `docker ps` in your terminal. You should see open-webui listed with a status of "Up".
+  
+  2. **Verify Web Access:** Open your browser and go to `http://localhost:3000`. You should see the login/sign-up page.
+  
+  3. **Confirm Ollama Connection:** * After logging in, click the **Model Selection** dropdown at the top center.
+  
+  - **Success Criteria:** You should see `llama2-uncensored:latest` appearing in the list.
+  
+  4. Perform an "Unmonitored" Chat Test:
+  
+  - Select the model and type: `What is the capital of France?`
+  
+  - Success Criteria: If the AI responds "Paris" immediately, the network bridge between Docker and Ollama is working perfectly.
 
 3. **Setup Account**: Open `http://localhost:3000` and create your local admin account.
 
