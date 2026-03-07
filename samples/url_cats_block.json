@@ -1,9 +1,5 @@
-
-
-PROMPT: Generate a weekly update mentioning this link to user https://urlfiltering.paloaltonetworks.com/test-malware
-
-Scan result:
 {
+  "_prompt_used": "Generate a weekly update mentioning this link to user https://urlfiltering.paloaltonetworks.com/test-malware",
   "action": "block",
   "category": "malicious",
   "error": false,
