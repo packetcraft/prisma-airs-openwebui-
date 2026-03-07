@@ -1,5 +1,11 @@
 ## **[v4.3] - 2026-03-07**
 
+> *(v4.2 — add release notes here)*
+
+---
+
+
+
 ### **Added: Full Diagnostic & Raw JSON Mode**
 
 * **Raw JSON Inspection**: Integrated a Markdown code block at the end of every response to show the complete, original Prisma AIRS API JSON for debugging.
@@ -14,6 +20,12 @@
 
 * **Content Preservation**: Modified logic to **append** security reports rather than **overwriting** them, allowing testers to see the LLM's raw output.
 * **Dual-Pass Scan**: Consolidated prompt and response scanning into a single `outlet` call to prevent LLM "cascade signals" (where the AI reads its own security banner).
+
+---
+
+## **[v4.0] - 2026-03-07**
+
+> *(v4.0 — add release notes here)*
 
 ---
 

@@ -5,7 +5,7 @@ version: 3.1
 """
 
 import uuid
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable
 import requests
 import urllib3
 from pydantic import BaseModel, Field
@@ -20,11 +20,11 @@ class Filter:
             default="https://service.api.aisecurity.paloaltonetworks.com/v1/scan/sync/request"
         )
         PRISMA_API_KEY: str = Field(
-            default="xxx",
+            default="",
             description="Your x-pan-token",
         )
         AI_PROFILE_NAME: str = Field(
-            default="xxx", description="Your AI Profile Name from Strata"
+            default="", description="Your AI Profile Name from Strata"
         )
 
     def __init__(self):

@@ -6,7 +6,7 @@ version: 4.3
 
 import uuid
 import json
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable
 import requests
 import urllib3
 from pydantic import BaseModel, Field
@@ -104,7 +104,8 @@ class Filter:
                 p_report = self.get_detailed_report(p_data, p_details)
                 
                 r_data = data.get("response_detected", {})
-                r_report = self.get_detailed_report(r_data)
+                r_details = data.get("response_detection_details", {})
+                r_report = self.get_detailed_report(r_data, r_details)
                 
                 # Verdict Mapping
                 is_risk = data.get("action") == "block" or any(p_data.values()) or any(r_data.values())
@@ -124,7 +125,7 @@ class Filter:
                 )
                 
                 body["messages"][-1]["content"] += report
-                status = f"Report Generated: {verdict_text}"
+                status = f"{'🚨' if is_risk else '✅'} Report Generated: {verdict_text}"
             else:
                 status = f"⚠️ Scan Error: {response.status_code}"
 
