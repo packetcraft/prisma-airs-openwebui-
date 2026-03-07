@@ -54,7 +54,9 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
 ## 📂 Repository Structure
 
 * `functions/`: Contains the Python middleware (Filter) for Open WebUI.
-* `docs/`: Step-by-step setup guides and troubleshooting.
+* `docs/`: Step-by-step setup guides, troubleshooting, and architecture documentation.
+  * [Setup Guide](./docs/setup-guide.md) — installation and configuration walkthrough.
+  * [PRD](./docs/PRD.md) — filter architecture, request flow diagrams for all three modes, API schema notes, and the streaming obscurement limitation.
 * `samples/`: Real Prisma AIRS API JSON responses captured for development and testing reference.
 
 ---
