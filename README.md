@@ -20,7 +20,7 @@ Running local AI offers privacy and speed, but it often lacks the security layer
 If you are already familiar with Docker and Ollama, follow these three steps:
 
 1. **Pull the Model**: `ollama pull llama2-uncensored:latest`.
-2. **Launch WebUI**: Run the Open WebUI Docker container 'docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main'.
+2. **Launch WebUI**: Run the Open WebUI Docker container `docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main`.
 3. **Install Filter**: Copy the code from `functions/prisma_airs_interceptor_(monitor_mode).py` into your OpenWebUI profile/Admin Panel/Functions.
 
 **Detailed instructions can be found in the [Setup Guide](./docs/setup-guide.md).**
