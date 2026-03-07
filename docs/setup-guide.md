@@ -45,8 +45,9 @@ Open WebUI provides a ChatGPT-like interface and a powerful "Functions" engine.
 ```bash
 docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
 ```
-    **-p 3000:8080**: Maps the web interface to `http://localhost:3000`.
-    **--add-host**: Allows the Docker container to talk to Ollama running on your Mac.
+- **-p 3000:8080**: Maps the web interface to `http://localhost:3000`.
+- **--add-host**: Allows the Docker container to talk to Ollama running on your Mac.
+
   
 ✅ Verification & Validation
 Follow these steps to confirm the interface is live and connected to your local model:
@@ -58,9 +59,9 @@ Follow these steps to confirm the interface is live and connected to your local 
 3. **Confirm Ollama Connection:** * After logging in, click the **Model Selection** dropdown at the top center.
   - **Success Criteria:** You should see `llama2-uncensored:latest` appearing in the list.
   
-4. Perform an "Unmonitored" Chat Test:
-  - Select the model and type: `What is the capital of France?`
-  - Success Criteria: If the AI responds "Paris" immediately, the network bridge between Docker and Ollama is working perfectly.
+4. **Perform an "Unmonitored" Chat Test:**
+    - Select the model and type: `What is the capital of France?`
+    - Success Criteria: If the AI responds "Paris" immediately, the network bridge between Docker and Ollama is working perfectly.
 
 3. **Setup Account**: Open `http://localhost:3000` and create your local admin account.
 
@@ -89,6 +90,23 @@ We will now insert a Python-based "Filter" that intercepts every chat message.
 2. **PRISMA_API_KEY**: Paste your `x-pan-token`.
 3. **AI_PROFILE_NAME**: Enter the name of your security profile from the Strata console.
 4. **Save**: Click **Save**.
+
+**!! where to get Prisma AIRS details and API keys**
+  
+  You can manage API keys and AI security profiles in Strata Cloud Manager.
+  
+    1. Log in to [Strata Cloud Manager](http://stratacloudmanager.paloaltonetworks.com/).
+    2. Navigate to AI Security > API Applications.
+    3. In the top right corner, click:
+    - Manage > API Keys to copy, regenerate, or rotate the API key token.
+    - Manage > Security Profiles to fetch details or update AI security profiles.
+    - Manage > Custom Topics create or update custom topics for custom topic guardrails threat detections.
+
+    * API Key Token: This token is generated during the onboarding process in Strata Cloud Manager (see the onboarding prerequisite step above). Include the API key token in all API requests using the 'x-pan-token' header.
+    * AI Security Profile Name: This is the API security profile you created during the onboarding process in Strata Cloud Manager (see the prerequisite step on creating an API security profile above). Specify this profile name or the profile ID in the API request payload in the 'ai_profile' field.
+    
+
+  For complete details, refer to adminstration guide for the section on how to "manage applications, API Keys, security profiles, and custom topics". [refer doc:](https://pan.dev/prisma-airs/api/airuntimesecurity/airuntimesecurityapi/)
 
 ### **Step 5: Enable Monitoring for Your Model**
 
