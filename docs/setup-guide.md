@@ -172,6 +172,21 @@ The filter must be enabled in two places: globally (to activate it) and per mode
 
 ---
 
+## **Phase 3b: Switching to Enforcer Mode**
+
+If you've verified detection is working and want to move to active enforcement, swap the filter for `prisma_airs_enforcer.py`.
+
+The installation, credential, and enable steps are identical to those in Phase 2 — just use the enforcer file and name the function `prisma_airs_enforcer`.
+
+Once active, behavior differs from Detector in two ways:
+
+- **Flagged prompts** are hard-blocked at the inlet — the model never sees them.
+- **Flagged responses** are fully replaced with a redaction notice — the original output is discarded.
+
+Re-run the same Phase 3 test prompts to confirm enforcement is working. You should see blocks instead of warning banners.
+
+---
+
 ## **Phase 4: Troubleshooting**
 
 | Issue | Potential Cause | Fix |
