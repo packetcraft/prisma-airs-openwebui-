@@ -196,6 +196,8 @@ class Filter:
                             f"**[2] Response Detected (Output):** {r_report}\n"
                             f"{dlp_pattern_line}"
                             f"{tool_line}"
+                            f"\n**Raw API Request (JSON):**\n"
+                            f"```json\n{json.dumps(payload, indent=2)}\n```"
                             f"\n**Raw API Response (JSON):**\n"
                             f"```json\n{json.dumps(data, indent=2)}\n```"
                         )
