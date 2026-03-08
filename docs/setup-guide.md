@@ -185,6 +185,8 @@ Once active, behavior differs from Detector in two ways:
 
 Re-run the same Phase 3 test prompts to confirm enforcement is working. You should see blocks instead of warning banners.
 
+> **Caveat:** Response redaction applies *after* the model has finished streaming. Flagged content may be briefly visible in the UI before the outlet hook replaces it. See [**Streaming Obscurement — Known Limitation**](PRD.md#streaming-obscurement--known-limitation) in the PRD for details.
+
 ---
 
 ## **Phase 4: Troubleshooting**
