@@ -139,11 +139,11 @@ The filter must be enabled in two places: globally (to activate it) and per mode
 1. Go to **Workspace > Models** at `http://localhost:3000/workspace/models`.
 2. Click the **+ (Plus)** button to create a new model at `http://localhost:3000/workspace/models/create`.
 3. **Configure the model**:
-   - **Name**: Enter `myChat-airs-monitored` (or any name you prefer).
+   - **Name**: Enter `OllamaChat (airs-monitored)` (or any name you prefer).
    - **Base Model**: Select `llama2-uncensored` from the dropdown.
    - **Filter**: Select your `prisma_airs_detector` or `prisma_airs_enforcer` function using the selector.
 4. Click **Save and update** at the very bottom.
-5. Click the `myChat-airs-monitored` model you just created to open a chat session.
+5. Click the `OllamaChat (airs-monitored)` model you just created to open a chat session.
 6. The chat interface appears — you are now protected by Prisma AIRS.
 
 ---
