@@ -110,8 +110,8 @@ To install the filter:
 
 1. **Navigate**: In Open WebUI, click your **Profile Name** (icon, bottom-left) > **Admin Panel** > **Functions** — or go directly to `http://localhost:3000/admin/functions`.
 2. **Create**: Click the **+ (Plus)** button to create a new function.
-3. **Configure Type**: In the top-right corner of the editor, click the dropdown and select **Filter**.
-   *Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*
+~~3. **Configure Type**: In the top-right corner of the editor, click the dropdown and select **Filter**.~~
+   ~~*Filters allow you to run code during the 'Inlet' (input) and 'Outlet' (output) phases.*~~
 4. **Paste Code**: Clear the editor and paste the contents of your chosen file from `functions/`.
 5. **Name**: Give the function a name such as `prisma_airs_detector` or `prisma_airs_enforcer`. You can use the same value for the description field.
 6. **Save**: Click **Save** in the bottom-right.
