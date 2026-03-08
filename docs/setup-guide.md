@@ -102,7 +102,7 @@ Two filter modes are available. Choose based on how you want threats handled:
 | Mode | File | Behavior |
 | --- | --- | --- |
 | **Detector** | `prisma_airs_detector.py` | Annotates messages with a warning banner. Prompts and responses still pass through. |
-| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks flagged prompts and fully redacts flagged responses. |
+| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks flagged prompts and masks sensitive data in responses. |
 
 Start with **Detector** if you want to observe before enforcing.
 
@@ -197,7 +197,7 @@ The installation, credential, and enable steps are identical to those in Phase 2
 Once active, behavior differs from Detector in two ways:
 
 - **Flagged prompts** are hard-blocked at the inlet — the model never sees them.
-- **Flagged responses** are fully replaced with a redaction notice — the original output is discarded.
+- **Flagged responses** are either fully replaced with a redaction notice or, if only sensitive data (DLP) is detected, the leaking content is masked with a prominent `🛡️ [SENSITIVE DATA MASKED] 🛡️` marker.
 
 Re-run the same Phase 3 test prompts to confirm enforcement is working. You should see blocks instead of warning banners.
 

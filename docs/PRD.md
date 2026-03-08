@@ -159,7 +159,36 @@ User sends prompt
       ▼  "✅ Response Cleared" — original response left untouched
 ```
 
-**Key difference from v3.2:** The persistent `done=False` inlet banner shows the LLM is generating and that a security scan will follow — making clear the LLM is the active process, not AIRS.
+### v3.4 (current)
+
+```
+User sends prompt
+      │
+      ▼
+[INLET] "🔍 Prisma AIRS: Scanning Prompt..."    ← status bar (done=False)
+      │
+      │ risk → "🚫 Blocked at Prompt: ..." (done=True) → request killed ✋
+      │
+      │ safe ↓
+      ▼
+[INLET] "💬 LLM generating response — Prisma AIRS scan will follow"
+      │
+      ▼
+[LLM STREAMING] tokens appear in chat window
+      │
+      ▼
+[OUTLET] "🔍 Prisma AIRS: Scanning response..."
+      │
+      ├─ dual-pass risk (non-DLP or hard block) ─▶ Full response OVERWRITTEN
+      │                                          🚫 PRISMA AIRS BLOCK
+      │
+      ├─ DLP-only risk ─▶ Append Prominent Masking Marker
+      │                  🛡️ **[PRISMA AIRS: SENSITIVE DATA MASKED]** 🛡️
+      │
+      └─ safe ─▶ "✅ Response Cleared" — original response untouched
+```
+
+**Key difference from v3.3:** Introduced attention-grabbing visual clues (shield emojis and bold markers) when masking sensitive data to ensure security actions are not missed by the user.
 
 ---
 
@@ -247,6 +276,9 @@ Both filters use a consistent compact format. Detector **appends**; Enforcer **o
 **Prompt:** <comma-separated risk labels>
 **Response:** <comma-separated risk labels>
 **DLP Patterns:** <pattern name> (<N> hit/hits), ...   ← only when dlp: true in response
+
+---
+🛡️ **[PRISMA AIRS: SENSITIVE DATA MASKED]** 🛡️   ← added for DLP violations in Enforcer v3.4
 ```
 
 Toxic categories are always rendered inline: `Toxic Content (Cybercrimes, Other Non-violent crime and Misconduct)`.

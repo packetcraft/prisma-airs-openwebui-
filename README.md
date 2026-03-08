@@ -15,7 +15,7 @@ Running local AI offers privacy and speed, but it often lacks the security layer
 
 * **Inbound Protection**: Detects jailbreaks and prompt injections before they reach your model.
 * **Outbound Protection**: Identifies PII (Social Security Numbers, Credit Cards) and sensitive data in AI responses.
-* **DLP Masking**: (Enforcer Mode) Automatically redacts sensitive data while letting the rest of the message pass through.
+* **DLP Masking**: (Enforcer Mode) Automatically redacts sensitive data with prominent security markers while letting the rest of the message pass through.
 * **Hallucination Monitoring**: Verify AI responses against a provided context using the grounding detection engine.
 * **Visual Feedback**: Real-time status indicators in the chat UI show you exactly when a scan is occurring.
 
@@ -44,7 +44,7 @@ Two filter functions are available depending on how strictly you want to enforce
 | Mode | File | Behavior |
 | --- | --- | --- |
 | **Detector** | `prisma_airs_detector.py` | Flags threats by annotating the message with a warning banner. The prompt and response still pass through. Good for visibility and testing. |
-| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks the message if a threat is detected. Flagged prompts never reach the model; flagged responses are fully redacted. Use for active enforcement. |
+| **Enforcer** | `prisma_airs_enforcer.py` | Hard-blocks the message if a threat is detected. Flagged prompts never reach the model; flagged responses are either fully redacted or prominent masked if only DLP is detected. |
 
 Start with Detector if you want to observe behavior before enforcing. Switch to Enforcer when you're ready to enforce.
 

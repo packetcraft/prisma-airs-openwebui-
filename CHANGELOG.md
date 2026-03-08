@@ -58,6 +58,16 @@ All notable changes to this project are documented here, organised by version an
 
 ---
 
+## **[v3.4] - 2026-03-08**
+
+### **Improved: Enforcer Mode — Attention-Grabbing DLP Masking**
+
+* **Prominent DLP Feedback**: When sensitive data is masked instead of blocked, the response now includes a clearly separated footer: `🛡️ **[PRISMA AIRS: SENSITIVE DATA MASKED]** 🛡️` preceded by a horizontal rule.
+* **Enhanced Status Title**: The UI status for masked responses now uses a shield emoji and more descriptive text: `🛡️ Response Masked (DLP Violation)`.
+* **Version Bump**: Updated `prisma_airs_enforcer.py` to v3.4.
+
+---
+
 ## **[v3.3] - 2026-03-08**
 
 ### **Improved: Block Mode — Clearance Banner + Unified Report Format**

@@ -1,7 +1,7 @@
 """
 title: Prisma AIRS Enforcer
 author: Gemini
-version: 3.3
+version: 3.4
 
 Flow:
   [INLET]  Scan prompt immediately.
@@ -280,8 +280,8 @@ class Filter:
 
                         # Use masking if enabled and only DLP/non-hard risks triggered on response
                         if self.valves.ENABLE_DLP_MASKING and not p_hits and not r_hits_non_dlp and r_data.get("dlp") and masked_data:
-                            body["messages"][-1]["content"] = masked_data.get("data", ai_res) + "\n\n*[Prisma AIRS: Sensitive data masked]*"
-                            status = "✅ Response Masked (DLP)"
+                            body["messages"][-1]["content"] = masked_data.get("data", ai_res) + "\n\n---\n🛡️ **[PRISMA AIRS: SENSITIVE DATA MASKED]** 🛡️"
+                            status = "🛡️ Response Masked (DLP Violation)"
                         else:
                             api_category = data.get("category", "")
                             category_label = f" — `{api_category}`" if api_category else ""
