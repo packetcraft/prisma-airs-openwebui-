@@ -1,5 +1,8 @@
 # 🛡️ Prisma AIRS Security Interceptor for Open WebUI
 
+> [!CAUTION]
+> **Rapid PoC Only**: This project is designed for rapid Proof of Concept (PoC) and security research. It is **not** intended for production use as a finished integration (e.g., it uses `verify=False` for outbound API calls and lacks enterprise-grade hardening of the middleware logic).
+
 **Enhance your local GenAI deployment with enterprise-grade security guardrails.**
 
 This project provides a seamless integration between [Ollama](https://ollama.com), [Open WebUI](https://openwebui.com), and [Palo Alto Networks Prisma AIRS](https://pan.dev/prisma-airs/). It allows you to run powerful, local LLMs while maintaining real-time monitoring for prompt injections and sensitive data leakage.
@@ -12,6 +15,8 @@ Running local AI offers privacy and speed, but it often lacks the security layer
 
 * **Inbound Protection**: Detects jailbreaks and prompt injections before they reach your model.
 * **Outbound Protection**: Identifies PII (Social Security Numbers, Credit Cards) and sensitive data in AI responses.
+* **DLP Masking**: (Enforcer Mode) Automatically redacts sensitive data while letting the rest of the message pass through.
+* **Hallucination Monitoring**: Verify AI responses against a provided context using the grounding detection engine.
 * **Visual Feedback**: Real-time status indicators in the chat UI show you exactly when a scan is occurring.
 
 ---
@@ -23,7 +28,8 @@ This project has three external dependencies that must be in place before the fi
 | Dependency | Purpose | Where to get it |
 | --- | --- | --- |
 | **Ollama** | Runs LLMs locally on your hardware | [ollama.com](https://ollama.com) |
-| **Open WebUI** | Chat interface and filter/function engine — runs via Docker | [openwebui.com](https://openwebui.com) |
+| **Docker** | Container platform required to run Open WebUI | [docker.com](https://www.docker.com/products/docker-desktop/) |
+| **Open WebUI** | Chat interface and filter/function engine | [openwebui.com](https://openwebui.com) |
 | **Prisma AIRS API Key** | Authenticates requests to the AIRS scanning API (`x-pan-token`) | Strata Cloud Manager > AI Security > API Applications > **Manage > API Keys** |
 | **Prisma AIRS Security Profile Name** | Identifies which security policy to apply to scanned content | Strata Cloud Manager > AI Security > API Applications > **Manage > Security Profiles** |
 

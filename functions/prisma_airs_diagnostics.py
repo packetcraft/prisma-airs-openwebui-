@@ -24,6 +24,8 @@ class Filter:
             default="",
             description="The AI Security Profile name from Strata Cloud Manager"
         )
+        APP_NAME: str = Field(default="Open WebUI-Diag", description="The app name for API metadata")
+        CONTEXT: str = Field(default="", description="Optional context for grounding detection")
 
     def __init__(self):
         self.valves = self.Valves()
@@ -76,11 +78,11 @@ class Filter:
         summary = ", ".join(f"{name} ({hits} hit{'s' if hits != 1 else ''})" for name, hits in counts.items())
         return f"Patterns: {summary}"
 
-    async def inlet(self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
+    async def inlet(self, body: dict, __user__: dict = None, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
         """Pass-through for the user prompt — diagnostic mode does not block at inlet."""
         return body
 
-    async def outlet(self, body: dict, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
+    async def outlet(self, body: dict, __user__: dict = None, __event_emitter__: Callable[[dict], Awaitable[None]] = None) -> dict:
         """Performs a dual-pass scan and appends a detailed diagnostic report with Raw JSON."""
 
         # Improvement #8: early credential check
@@ -103,18 +105,27 @@ class Filter:
         user_prompt = messages[-2].get("content", "") if len(messages) > 1 else ""
 
         try:
+            # Dynamic metadata from __user__
+            user_email = "security-tester"
+            if __user__ and "email" in __user__:
+                user_email = __user__["email"]
+
             headers = {
                 "x-pan-token": self.valves.PRISMA_API_KEY.strip(),
                 "Content-Type": "application/json"
             }
 
+            content_obj = {"prompt": user_prompt, "response": ai_res}
+            if self.valves.CONTEXT.strip():
+                content_obj["context"] = self.valves.CONTEXT.strip()
+
             payload = {
                 "metadata": {
                     "ai_model": body.get("model", "Research-Model"),
-                    "app_name": "Open WebUI-Diag",
-                    "app_user": "security-tester"
+                    "app_name": self.valves.APP_NAME.strip(),
+                    "app_user": user_email
                 },
-                "contents": [{"prompt": user_prompt, "response": ai_res}],
+                "contents": [content_obj],
                 "tr_id": str(uuid.uuid4())[:12],
                 "ai_profile": {"profile_name": self.valves.AI_PROFILE_NAME.strip()},
             }
