@@ -144,7 +144,7 @@ The filter must be enabled in two places: globally (to activate it) and per mode
    - **Filter**: Select your `prisma_airs_detector` or `prisma_airs_enforcer` function using the selector.
 4. Click **Save and update** at the very bottom.
 5. Click the `OllamaChat (airs-monitored)` model you just created to open a chat session.
-6. The chat interface appears — you are now protected by Prisma AIRS.
+6. The chat interface appears — your chat is now protected by Prisma AIRS.
 
 ---
 
