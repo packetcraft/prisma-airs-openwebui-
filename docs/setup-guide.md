@@ -4,6 +4,22 @@ This guide walks you through setting up a private, secured AI environment on you
 
 ---
 
+## 📦 Dependencies
+
+Before starting, ensure you have the following in place:
+
+| Dependency | Description |
+| --- | --- |
+| **Ollama** | Local LLM inference engine. Download from [ollama.com](https://ollama.com). |
+| **Docker Desktop** | Required to run Open WebUI as a container. |
+| **Open WebUI** | Chat interface with a built-in filter/function engine. Deployed via Docker. |
+| **Prisma AIRS API Key** | Your `x-pan-token` used to authenticate calls to the AIRS scanning API. Obtain from Strata Cloud Manager: **AI Security > API Applications > Manage > API Keys**. |
+| **Prisma AIRS Security Profile Name** | The name of the AI security profile applied during scanning. Obtain from Strata Cloud Manager: **AI Security > API Applications > Manage > Security Profiles**. |
+
+> Prisma AIRS credentials require an active Palo Alto Networks account with AI Security enabled in [Strata Cloud Manager](https://stratacloudmanager.paloaltonetworks.com/).
+
+---
+
 ## **Phase 1: Local AI Infrastructure**
 
 ### **Step 1: Install Ollama (The Inference Engine)**

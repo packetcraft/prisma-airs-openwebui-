@@ -16,6 +16,21 @@ Running local AI offers privacy and speed, but it often lacks the security layer
 
 ---
 
+## 📦 Dependencies
+
+This project has three external dependencies that must be in place before the filter can function:
+
+| Dependency | Purpose | Where to get it |
+| --- | --- | --- |
+| **Ollama** | Runs LLMs locally on your hardware | [ollama.com](https://ollama.com) |
+| **Open WebUI** | Chat interface and filter/function engine — runs via Docker | [openwebui.com](https://openwebui.com) |
+| **Prisma AIRS API Key** | Authenticates requests to the AIRS scanning API (`x-pan-token`) | Strata Cloud Manager > AI Security > API Applications > **Manage > API Keys** |
+| **Prisma AIRS Security Profile Name** | Identifies which security policy to apply to scanned content | Strata Cloud Manager > AI Security > API Applications > **Manage > Security Profiles** |
+
+> Prisma AIRS credentials require an active Palo Alto Networks account with AI Security enabled in [Strata Cloud Manager](https://stratacloudmanager.paloaltonetworks.com/).
+
+---
+
 ## 🔀 Choose Your Mode
 
 Two filter functions are available depending on how strictly you want to enforce security:
