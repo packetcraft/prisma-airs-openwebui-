@@ -15,7 +15,7 @@ async def call_api(prompt, options, context):
     f = Filter()
 
     # 1. Credentials - ensure these are correct!
-    f.valves.PRISMA_API_KEY = "tThprwfAC3i65p39tp9lTP04oPI5HwTVjGgVV0e1mhEdFnSQ"
+    f.valves.PRISMA_API_KEY = ""
     f.valves.AI_PROFILE_NAME = "ark-sec-profile"
 
     # 2. Simulated LLM Response containing an AWS Key
