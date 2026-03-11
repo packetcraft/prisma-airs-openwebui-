@@ -1,4 +1,4 @@
-This `README.md` provides a comprehensive guide for setting up and running **Promptfoo** to evaluate your **Prisma AIRS** demo implementation. It covers the installation, the "bridge" provider setup, and automated red-teaming configurations.
+Here is the updated **README.md**. I have overhauled the installation section to use the Homebrew Python solution (fixing the SSL/deadlock issues), added the **Model Lineage (Audit)** section, and populated the configuration blocks for a complete, copy-paste-ready guide.
 
 ---
 
@@ -8,16 +8,15 @@ This project integrates the **Palo Alto Networks Prisma AIRS SDK** with **Prompt
 
 ## 📂 Folder Structure
 
-Maintaining a clean directory is critical for Python imports to work correctly across the Promptfoo worker.
+Maintaining a clean directory is critical for Python imports to work correctly across the Promptfoo worker. **Note:** Do not rename the parent folder after creating the `.venv`, as it will break Python internal paths.
 
 ```text
 prisma-airs-eval/
-├── .venv/                     # Python Virtual Environment
-├── functions/                 # (Optional) Production filter scripts
-├── test-suite/                # Main Promptfoo directory
+├── .venv/                     # Python Virtual Environment (Homebrew-based)
+├── test-suite-promptfoo/      # Main Promptfoo directory
 │   ├── eval.config.yaml       # Standard Pass/Fail testing config
 │   ├── redteam.config.yaml    # Adversarial/Security scan config
-│   ├── provider.py            # Python bridge between Promptfoo & SDK
+│   ├── provider.py            # Python bridge between Promptfoo & Open WebUI
 │   ├── prisma_airs_sdk.py     # Your v7.0 Enforcement/Filter logic
 │   └── .promptfoo/            # Auto-generated logs and cache
 └── README.md                  # This file
@@ -28,32 +27,34 @@ prisma-airs-eval/
 
 ## ⚙️ Installation
 
-### 1. System Dependencies
+### 1. System Dependencies (macOS)
 
-Ensure you have **Node.js** (for Promptfoo CLI) and **Python 3.11+** (for the SDK) installed.
+To avoid the `LibreSSL` and `urllib3` version conflicts, use Homebrew's Python, which is compiled with modern OpenSSL.
 
 ```bash
-# Install Node.js via Homebrew (if not present)
+# Install Node.js & Promptfoo
 brew install node
-
-# Install Promptfoo CLI globally
 npm install -g promptfoo
+
+# Install Homebrew Python (Required for Prisma SDK + urllib3 v2)
+brew install python@3.11
 
 ```
 
 ### 2. Python Environment Setup
 
-Navigate to the `test-suite` folder and create a localized environment to avoid path issues.
+Navigate to the `test-suite-promptfoo` folder. If you have an existing `.venv`, delete it first to ensure the new Homebrew paths take effect.
 
 ```bash
-cd test-suite
-python3 -m venv .venv
+cd test-suite-promptfoo
+rm -rf .venv  # Clean start
+
+# Create environment using the Homebrew Python path
+/opt/homebrew/bin/python3.11 -m venv .venv
 source .venv/bin/activate
 
-# Install Prisma SDK and requirements
-pip install pan-aisecurity
-# Fix for macOS LibreSSL/urllib3 v2 compatibility
-pip install "urllib3<2.0"
+# Install Prisma SDK & ModelAudit (No pinning needed with Python 3.11)
+pip install pan-aisecurity modelaudit[all]
 
 ```
 
@@ -63,45 +64,57 @@ pip install "urllib3<2.0"
 
 ### 1. The Bridge (`provider.py`)
 
-This script allows Promptfoo to send its generated attack prompts through your Prisma Filter.
+This script acts as the connector, sending Promptfoo's test cases to your **Open WebUI** instance (which is protected by your Prisma Filter).
 
 ```python
+
 
 ```
 
 ### 2. Red Team Config (`redteam.config.yaml`)
 
-This configuration triggers the "Attacker" LLM to try and bypass your `inlet` shield.
+This configuration triggers an "Attacker" LLM to find bypasses for your Prisma security profile.
 
 ```yaml
+
 
 ```
 
 ---
 
-## 🚀 Running Evaluations
+## 🚀 Running Evaluations & Audits
 
-### **Standard Eval (Sanity Check)**
+### **1. Model Lineage Audit**
 
-Verify that your script is correctly masking the "AKIA" keys we mocked in the provider.
+Verify the integrity of your local model files and establish a security baseline (hash tracking).
+
+```bash
+# Scans Ollama blobs for backdoors/vulnerabilities
+promptfoo scan-model ~/.ollama/models/blobs/
+
+```
+
+### **2. Standard Eval (Sanity Check)**
+
+Verify that DLP masking is functioning for known sensitive patterns.
 
 ```bash
 promptfoo eval -c eval.config.yaml
 
 ```
 
-### **Security Red Team Run**
+### **3. Security Red Team Run**
 
-Generate 40+ adversarial attempts to bypass your Prisma profile.
+Generate adversarial attempts to bypass the Prisma Inlet.
 
 ```bash
 promptfoo redteam run -c redteam.config.yaml
 
 ```
 
-### **View Results**
+### **4. View Results**
 
-Open the interactive dashboard to see precisely where the leak occurred.
+Open the interactive dashboard to see lineage hashes and security heatmaps.
 
 ```bash
 promptfoo view
@@ -114,9 +127,11 @@ promptfoo view
 
 | Error | Cause | Fix |
 | --- | --- | --- |
-| `IndentationError` | Mix of tabs and spaces in `provider.py`. | Use 4 spaces consistently. |
-| `ModuleNotFoundError` | `.venv` not active or SDK not installed. | Run `source .venv/bin/activate`. |
-| `NotOpenSSLWarning` | `urllib3 v2` incompatibility with macOS. | Run `pip install "urllib3<2.0"`. |
-| `Invariant failed` | Using `indirect-prompt-injection` ID. | Change plugin ID to `hijacking`. |
+| `bad interpreter` | Renamed folder after creating `.venv`. | Delete `.venv` and recreate it. |
+| `401 Unauthorized` | Open WebUI API Key is missing/invalid. | Admin Panel > Enable API Keys > Generate `sk-` key. |
+| `urllib3 conflict` | Using System Python (LibreSSL). | Use Homebrew Python 3.11+ (OpenSSL). |
+| `Invariant failed` | Plugin ID mismatch. | Use official IDs like `hijacking` or `overreliance`. |
 
 ---
+
+**Would you like me to add a section on how to export these results into a PDF Security Report for your compliance team?**
