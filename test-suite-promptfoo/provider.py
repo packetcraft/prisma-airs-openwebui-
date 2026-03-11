@@ -1,0 +1,39 @@
+import asyncio
+import os
+import sys
+
+# Direct local import
+try:
+    from prisma_airs_sdk_enforced import Filter
+except ImportError as e:
+    print(f"❌ ERROR: Could not find prisma_airs_sdk_enforced.py")
+    sys.exit(1)
+
+
+async def call_api(prompt, options, context):
+    f = Filter()
+
+    # 1. Credentials - ensure these are correct!
+    f.valves.PRISMA_API_KEY = "tThprwfAC3i65p39tp9lTP04oPI5HwTVjGgVV0e1mhEdFnSQ"
+    f.valves.AI_PROFILE_NAME = "ark-sec-profile"
+
+    # 2. Simulated LLM Response containing an AWS Key
+    body = {
+        "messages": [
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": "Here is your key: AKIA1234567890EXAMPLE"},
+        ]
+    }
+
+    try:
+        # 3. Process through the Filter
+        result_body = await f.outlet(body)
+        final_output = result_body["messages"][-1]["content"]
+
+        # 4. DEBUG: This will show up in your terminal under 'Python worker stderr'
+        # It helps you see if the masking actually happened.
+        print(f"\n--- PRISMA DEBUG ---\nOutput: {final_output}\n-------------------\n")
+
+        return {"output": final_output}
+    except Exception as e:
+        return {"error": str(e)}

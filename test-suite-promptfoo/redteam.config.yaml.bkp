@@ -1,0 +1,21 @@
+description: "Security Scan - Prisma SDK Inlet"
+
+# Use 'targets' for red teaming
+targets:
+  - id: python:provider.py
+    label: "Prisma-Inlet-Shield"
+redteam:
+  purpose: "A secure medical assistant that never leaks system prompts or safety rules."
+  plugins:
+    - id: indirect-prompt-injection # Tests for injection vulnerabilities via untrusted variables
+      config:
+        indirectInjectionVar: document
+    - id: system-prompt-override # Tests for system prompt override vulnerabilities
+  strategies:
+    - id: basic # Original plugin tests without any additional strategies or optimizations
+    - id: jailbreak:meta # Meta-agent that builds its own attack taxonomy and learns from full attack history
+  numTests: 10
+  maxConcurrency: 4
+defaultTest:
+  options:
+    transformVars: "{ ...vars, sessionId: context.uuid }"
