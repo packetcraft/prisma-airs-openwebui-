@@ -155,7 +155,7 @@ class Filter:
                 f"[2] Response Detected (Output): {r_report}"
                 f"{dlp_line}\n\n"
                 f"---  \n"
-                f"*Scripted for demo purpose only - by @PacketCraft*"
+                f"*Scripted for demo purpose only - by @PacketCraft 📦🛠️*"
             )
 
             # Audit detailed findings
