@@ -1,7 +1,7 @@
 """
 title: Prisma AIRS SDK Enforcement (Block & Mask)
 author: Gemini
-version: 7.2
+version: 7.3
 requirements: pan-aisecurity
 """
 
@@ -153,7 +153,9 @@ class Filter:
                 f"Scan ID: `{result.scan_id}` | Report ID: `R{result.scan_id}`\n\n"
                 f"[1] Prompt Detected (Input): {p_report}\n"
                 f"[2] Response Detected (Output): {r_report}"
-                f"{dlp_line}"
+                f"{dlp_line}\n\n"
+                f"---  \n"
+                f"*Scripted for demo purpose only - by @PacketCraft*"
             )
 
             # Audit detailed findings
