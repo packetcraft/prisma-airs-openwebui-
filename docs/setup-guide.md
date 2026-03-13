@@ -62,9 +62,7 @@ Open WebUI provides a ChatGPT-like interface and a powerful "Functions" engine.
 
    **macOS/Linux:**
 ```bash
-docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
-  -v open-webui:/app/data --name open-webui \
-  ghcr.io/open-webui/open-webui:main
+docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
 ```
    **Windows (PowerShell):**
 ```powershell
