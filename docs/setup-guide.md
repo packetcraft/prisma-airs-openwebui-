@@ -85,7 +85,7 @@ You should see `open-webui` listed with a status of `Up`.
 
 2. **Verify web access**: Open your browser and go to `http://localhost:3000`. You should see the login page.
 
-3. **Confirm Ollama connection**:opn open WebUI, navigate to **Profile** (bottom-left) **> Admin Panel > Settings > Connections**, and check if the Ollama API Base URL is set to to `http://host.docker.internal:11434`.
+3. **Confirm Ollama connection**: Open WebUI, navigate to **Profile** (bottom-left) **> Admin Panel > Settings > Connections**, and check if the Ollama API Base URL is set to to `http://host.docker.internal:11434`.
 4. After logging in, click the **Model Selection** dropdown at the top center. You should see `llama2-uncensored:latest` in the list.
 5. **Perform a baseline chat test**: Select the model and type `What is the capital of France?`. If the AI responds with "Paris" immediately, the network bridge between Docker and Ollama is working correctly.
 
