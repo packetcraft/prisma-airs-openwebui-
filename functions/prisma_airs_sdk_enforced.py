@@ -87,14 +87,14 @@ class Filter:
 
         report = (
             f"\n\n---\n"
-            f"🛡️ **PRISMA AIRS SECURITY DIAGNOSTIC ({stage})**\n"
+            f"🛡️ **PRISMA AIRS SECURITY REPORT ({stage})**\n"
             f"Overall Verdict: **{verdict}** — API Category: `{api_category}`\n"
             f"Scan ID: `{result.scan_id}` | Report ID: `R{result.scan_id}`\n\n"
             f"[1] Prompt Detected (Input): {p_report}\n"
             f"[2] Response Detected (Output): {r_report}"
             f"{dlp_line}\n\n"
             f"---  \n"
-            f"*Scripted for demo purpose only - by @PacketCraft 📦🛠️*"
+            f"*Scripted for demo purpose only - by @PacketCraft 🐙*"
         )
         return report
 
