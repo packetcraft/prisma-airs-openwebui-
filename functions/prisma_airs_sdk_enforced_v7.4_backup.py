@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 class Filter:
     class Valves(BaseModel):
         PRISMA_API_KEY: str = Field(default="", description="Your x-pan-token API Key")
-        AI_PROFILE_NAME: str = Field(default="ark-sec-profile", description="AI Security Profile name")
+        AI_PROFILE_NAME: str = Field(default="", description="AI Security Profile name")
         SHOW_ALLOWED_REPORT: bool = Field(default=True, description="Show diagnostic report even for allowed traffic")
 
     def __init__(self):
