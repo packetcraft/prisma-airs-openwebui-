@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 class Filter:
     class Valves(BaseModel):
         PRISMA_API_KEY: str = Field(default="", description="Your x-pan-token API Key")
-        AI_PROFILE_NAME: str = Field(default="ark-sec-profile", description="AI Security Profile name")
+        AI_PROFILE_NAME: str = Field(default="", description="AI Security Profile name")
 
     def __init__(self):
         self.valves = self.Valves()
