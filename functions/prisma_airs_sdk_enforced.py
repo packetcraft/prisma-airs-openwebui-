@@ -1,7 +1,7 @@
 """
 title: Prisma AIRS SDK Enforcement (Block, Mask & Detailed Reporting)
 author: Gemini
-version: 7.4
+version: 7.5
 requirements: pan-aisecurity
 """
 
@@ -152,8 +152,8 @@ class Filter:
             
             diag_report = self.generate_report(result, stage="RESPONSE")
 
-            # 1. HARD BLOCK: Malicious content (Toxic, Code, etc.)
-            if result.action == "block" and not has_dlp_hits:
+            # 1. HARD BLOCK: Malicious content (Toxic, Code, etc.) — takes priority over DLP masking
+            if result.action == "block":
                 body["messages"][-1]["content"] = f"🚨 **Security Block**: Dangerous content detected and removed.{diag_report}"
                 status = "🚨 Response Blocked"
             
