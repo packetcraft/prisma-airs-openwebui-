@@ -1,26 +1,23 @@
-Here is the updated **README.md**. I have overhauled the installation section to use the Homebrew Python solution (fixing the SSL/deadlock issues), added the **Model Lineage (Audit)** section, and populated the configuration blocks for a complete, copy-paste-ready guide.
-
----
 
 # 🛡️ Prisma AIRS & Promptfoo Security Eval
 
-This project integrates the **Palo Alto Networks Prisma AIRS SDK** with **Promptfoo** to perform automated security evaluations, red-teaming, and DLP masking validation on local LLM stacks (Ollama).
+This project integrates the **Palo Alto Networks Prisma AIRS SDK** with **Promptfoo** to perform automated security evaluations, red-teaming, and DLP masking validation on local LLM stacks (Ollama + Open WebUI).
 
 ## 📂 Folder Structure
 
-Maintaining a clean directory is critical for Python imports to work correctly across the Promptfoo worker. **Note:** Do not rename the parent folder after creating the `.venv`, as it will break Python internal paths.
+Maintaining a clean directory is critical for Python imports. **Note:** Do not rename the parent folder after creating the `.venv`, as it will break Python internal paths.
 
-```text
-prisma-airs-eval/
-├── .venv/                     # Python Virtual Environment (Homebrew-based)
-├── test-suite-promptfoo/      # Main Promptfoo directory
-│   ├── eval.config.yaml       # Standard Pass/Fail testing config
-│   ├── redteam.config.yaml    # Adversarial/Security scan config
-│   ├── provider.py            # Python bridge between Promptfoo & Open WebUI
-│   ├── prisma_airs_sdk.py     # Your v7.0 Enforcement/Filter logic
-│   └── .promptfoo/            # Auto-generated logs and cache
-└── README.md                  # This file
+Plaintext
 
+```
+test-suite-promptfoo/
+├── .venv/                      # Python Virtual Environment (Homebrew-based)
+├── eval.config.yaml            # Standard Pass/Fail testing config
+├── redteam.config.yaml         # Adversarial/Security scan config
+├── provider.py                 # API Bridge: Promptfoo -> Open WebUI -> Prisma
+├── prisma_airs_sdk_enforced.py # v7.9 Pure Markdown Filter logic
+├── .promptfoo/                 # Auto-generated logs and cache
+└── README.md                   # This file
 ```
 
 ---
@@ -29,23 +26,24 @@ prisma-airs-eval/
 
 ### 1. System Dependencies (macOS)
 
-To avoid the `LibreSSL` and `urllib3` version conflicts, use Homebrew's Python, which is compiled with modern OpenSSL.
+Use Homebrew's Python to ensure compatibility with modern OpenSSL/urllib3.
 
-```bash
+Bash
+
+```
 # Install Node.js & Promptfoo
 brew install node
 npm install -g promptfoo
 
-# Install Homebrew Python (Required for Prisma SDK + urllib3 v2)
+# Install Homebrew Python
 brew install python@3.11
-
 ```
 
 ### 2. Python Environment Setup
 
-Navigate to the `test-suite-promptfoo` folder. If you have an existing `.venv`, delete it first to ensure the new Homebrew paths take effect.
+Bash
 
-```bash
+```
 cd test-suite-promptfoo
 rm -rf .venv  # Clean start
 
@@ -53,85 +51,100 @@ rm -rf .venv  # Clean start
 /opt/homebrew/bin/python3.11 -m venv .venv
 source .venv/bin/activate
 
-# Install Prisma SDK & ModelAudit (No pinning needed with Python 3.11)
-pip install pan-aisecurity modelaudit[all]
-
+# Install Prisma SDK & Requirements
+pip install pan-aisecurity requests
 ```
 
 ---
 
-## 🛠️ Configuration Files
+## 🛠️ Configuration & Integration
 
-### 1. The Bridge (`provider.py`)
+### 1. The Model Alias (Open WebUI)
 
-This script acts as the connector, sending Promptfoo's test cases to your **Open WebUI** instance (which is protected by your Prisma Filter).
+Ensure you have created a model alias in Open WebUI:
 
-```python
+1. Go to **Workspace > Models**.
+    
+2. Create a model named **`ol---enforcedsdk`** based on `llama3.2`.
+    
+3. Attach the `prisma_airs_sdk_enforced.py` filter to this model.
+    
 
+### 2. The Bridge (`provider.py`)
+
+This script routes Promptfoo attacks to your secured model alias.
+
+Python
 
 ```
+import requests, json, asyncio
 
-### 2. Red Team Config (`redteam.config.yaml`)
+async def call_api(prompt, options, context):
+    url = "http://localhost:3000/api/chat/completions"
+    headers = {
+        "Authorization": "Bearer sk-YOUR_API_KEY",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "ol---enforcedsdk",
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    return {"output": data['choices'][0]['message']['content']}
+```
 
-This configuration triggers an "Attacker" LLM to find bypasses for your Prisma security profile.
+### 3. Red Team Config (`redteam.config.yaml`)
 
-```yaml
+YAML
 
+```
+targets:
+  - id: python:provider.py
+    label: "Prisma-Secured-Llama"
 
+redteam:
+  purpose: "A secure assistant that protects PII and blocks toxic content."
+  plugins:
+    - id: hijacking
+    - id: overreliance
+    - id: pii:direct
+  strategies:
+    - id: jailbreak:meta
 ```
 
 ---
 
-## 🚀 Running Evaluations & Audits
+## 🚀 Running Evaluations
 
-### **1. Model Lineage Audit**
+### **1. Security Red Team Run**
 
-Verify the integrity of your local model files and establish a security baseline (hash tracking).
+Generate adversarial attempts to bypass the Prisma Inlet/Outlet.
 
-```bash
-# Scans Ollama blobs for backdoors/vulnerabilities
-promptfoo scan-model ~/.ollama/models/blobs/
+Bash
 
 ```
-
-### **2. Standard Eval (Sanity Check)**
-
-Verify that DLP masking is functioning for known sensitive patterns.
-
-```bash
-promptfoo eval -c eval.config.yaml
-
-```
-
-### **3. Security Red Team Run**
-
-Generate adversarial attempts to bypass the Prisma Inlet.
-
-```bash
 promptfoo redteam run -c redteam.config.yaml
-
 ```
 
-### **4. View Results**
+### **2. View Results**
 
-Open the interactive dashboard to see lineage hashes and security heatmaps.
+Open the interactive dashboard to see the **Prisma Security Reports** rendered inside the response bubbles.
 
-```bash
+Bash
+
+```
 promptfoo view
-
 ```
 
 ---
 
 ## ⚠️ Troubleshooting
 
-| Error | Cause | Fix |
-| --- | --- | --- |
-| `bad interpreter` | Renamed folder after creating `.venv`. | Delete `.venv` and recreate it. |
-| `401 Unauthorized` | Open WebUI API Key is missing/invalid. | Admin Panel > Enable API Keys > Generate `sk-` key. |
-| `urllib3 conflict` | Using System Python (LibreSSL). | Use Homebrew Python 3.11+ (OpenSSL). |
-| `Invariant failed` | Plugin ID mismatch. | Use official IDs like `hijacking` or `overreliance`. |
-
----
-
-**Would you like me to add a section on how to export these results into a PDF Security Report for your compliance team?**
+|**Error**|**Cause**|**Fix**|
+|---|---|---|
+|`Error 401`|Session expired or API Key invalid.|Generate a new `sk-` key in Open WebUI Account Settings.|
+|`NoneType` subscriptable|Model is loading or API structure is unexpected.|Use the updated `provider.py` with safe-access checks.|
+|`Connection Refused`|Open WebUI is not running or URL is wrong.|Ensure `localhost:3000` is accessible in browser.|
+|Dashboard shows raw HTML|UI Sanitizer escaping tags.|Ensure you are using **v7.9 (Pure Markdown)** of the filter script.|
