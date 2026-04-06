@@ -75,6 +75,38 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway `
 
 3. **Create Your Account**: Open `http://localhost:3000` and register your local admin account.
 
+4a. **Run with Authentication disabled (not recommended)** Now, run your command with the added -e WEBUI_AUTH=False flag:
+
+```bash
+docker run -d -p 3000:8080 \
+  -e WEBUI_AUTH=False \
+  --add-host=host.docker.internal:host-gateway \
+  -v open-webui:/app/data \
+  --name open-webui \
+  ghcr.io/open-webui/open-webui:main
+```
+4b. **Reset your credentials in the Browser)**
+- Open your browser to http://localhost:3000.
+- You should be logged in automatically (or see no login screen).
+- Go to **Settings** (bottom left) > **Admin Settings > Users.**
+- Find your account, click the **Edit** (pencil) icon, and update your password and email.
+- **Make sure your user role is set to "Admin"**.
+
+4c. Re-enable Authentication (Crucial!)
+Leaving WEBUI_AUTH=False is a security risk. Once you've fixed your account, stop the container and restart it normally:
+
+```bash
+docker stop open-webui
+docker rm open-webui
+
+# Back to your original command
+docker run -d -p 3000:8080 \
+  --add-host=host.docker.internal:host-gateway \
+  -v open-webui:/app/data \
+  --name open-webui \
+  ghcr.io/open-webui/open-webui:main
+```
+
 ### ✅ Verify Open WebUI
 
 1. **Check container status**:
