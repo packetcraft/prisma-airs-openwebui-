@@ -29,34 +29,31 @@ Open your Terminal and try these commands:
     ```bash
     ollama ps
     ```
-*   **Run a model in the terminal**: Start an interactive chat session without using a browser.
+*   **Run a model (Basic)**:
     ```bash
     ollama run dolphin3:8b-llama3.1-q4_K_M "Why is the sky blue?"
     ```
+*   **Run with Verbose output**: See timing stats and processing speed.
+    ```bash
+    ollama run dolphin3:8b-llama3.1-q4_K_M "Tell me a joke" --verbose
+    ```
+*   **Run with a System Prompt**: Force the model to adopt a specific persona.
+    ```bash
+    ollama run dolphin3:8b-llama3.1-q4_K_M --system "You are a helpful assistant that speaks only in Pirate-slang" "How do I secure my server?"
+    ```
+*   **Run and return JSON**: Useful for scripts and automation.
+    ```bash
+    ollama run dolphin3:8b-llama3.1-q4_K_M "List 3 security best practices" --format json
+    ```
 
 ### Step 2: Test the Ollama API (curl)
-Ollama exposes a REST API on port `11434`. This is how Open WebUI communicates with it. You can test it yourself using `curl`.
+Ollama exposes a REST API on port `11434`. This is how Open WebUI communicates with it. You can test it yourself using `curl` to see how applications interact with the model.
 
-*   **Generate a response (Streaming)**:
+*   **API call with Advanced Options**: This example shows how to control the model's "creativity" (temperature) and limits (top_k/top_p) while requesting a non-streaming JSON response.
     ```bash
     curl http://localhost:11434/api/generate -d '{
       "model": "dolphin3:8b-llama3.1-q4_K_M",
-      "prompt": "Write a short poem about security."
-    }'
-    ```
-*   **Generate a response (Non-streaming)**: Add `"stream": false` to get the full JSON object at once.
-    ```bash
-    curl http://localhost:11434/api/generate -d '{
-      "model": "dolphin3:8b-llama3.1-q4_K_M",
-      "prompt": "What is 2+2?",
-      "stream": false
-    }'
-    ```
-*   **Advanced Options**: You can control the model's "creativity" using the `options` parameter.
-    ```bash
-    curl http://localhost:11434/api/generate -d '{
-      "model": "dolphin3:8b-llama3.1-q4_K_M",
-      "prompt": "Tell me a joke.",
+      "prompt": "Explain what a prompt injection is in 2 sentences.",
       "stream": false,
       "options": {
         "temperature": 0.2,
