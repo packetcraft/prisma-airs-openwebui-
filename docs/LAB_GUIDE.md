@@ -101,6 +101,19 @@ Now we add the Palo Alto Networks security layer.
 3.  Copy the contents of `/functions/prisma_airs_enforcer.py` from this project and paste it into the editor.
 4.  Name it `Prisma_AIRS_Enforcer` and click **Save**.
 
+### 🔍 Understanding the Enforcer Flow
+The **Enforcer** is designed to proactively stop threats. It uses two hooks in the message lifecycle:
+
+```mermaid
+graph TD
+    A[User sends prompt] --> B{inlet Hook}
+    B -- "Risk Detected" --> C[HARD BLOCK ✋<br/>LLM Never Invoked]
+    B -- "Safe" --> D[LLM generates response]
+    D --> E{outlet Hook}
+    E -- "Risk Detected" --> F[OVERWRITE Response 🚫<br/>Block message shown]
+    E -- "Safe" --> G[Response shown to user ✅]
+```
+
 ### Step 2: Configure Credentials
 1.  In the Functions list, click the **Gear Icon (Settings)** for the Enforcer.
 2.  Enter your `PRISMA_API_KEY` (x-pan-token) and `AI_PROFILE_NAME`.
@@ -147,6 +160,18 @@ Now for the fun part. Open a new chat using your `Secured-Llama2` model.
 
 Want to see exactly what the Prisma AIRS API "sees"?
 
+### 🔍 Understanding the Diagnostic Flow
+Unlike the Enforcer, the **Diagnostics** filter never blocks. It observes the full exchange and reports back:
+
+```mermaid
+graph TD
+    A[User sends prompt] --> B[inlet Hook<br/>Pass-through]
+    B --> C[LLM generates response]
+    C --> D{outlet Hook}
+    D --> E[Dual-pass scan<br/>Prompt + Response]
+    E --> F[APPEND Diagnostic Report 📄<br/>Raw JSON Debugging Data]
+```
+
 1.  Go back to **Functions** and install `prisma_airs_diagnostics.py`.
 2.  Enable it and attach it to a new model called `AIRS-Diagnostic-View`.
 3.  Run the same prompts as before.
@@ -159,6 +184,24 @@ Want to see exactly what the Prisma AIRS API "sees"?
 ### Key Concepts Recap:
 *   **Inlet vs. Outlet**: Prisma AIRS scans the **Inlet** (User Prompt) to stop attacks early, and the **Outlet** (AI Response) to prevent data leaks.
 *   **Detection vs. Enforcement**: *Detection* just warns you; *Enforcement* (Enforcer) actively stops the threat.
+
+| Feature | **Detector** (Monitoring) | **Enforcer** (Protection) |
+| :--- | :--- | :--- |
+| **Primary Goal** | Visibility & Auditing | Prevention & Security |
+| **Inlet Action** | Pass-through (No block) | Hard Block on Risk |
+| **Outlet Action** | Append Security Alert | Overwrite with Block Message |
+| **User Impact** | Low (Alert only) | High (Prevents Harm) |
+
+**Detector Request Flow:**
+```mermaid
+graph TD
+    A[User sends prompt] --> B[inlet Hook<br/>Pass-through]
+    B --> C[LLM generates response]
+    C --> D{outlet Hook}
+    D -- "Risk Detected" --> E[APPEND Alert ⚠️<br/>Warning added to message]
+    D -- "Safe" --> F[Response shown normally ✅]
+```
+
 *   **The Uncensored Test**: By using `dolphin3:8b-llama3.1-q4_K_M`, we proved that our security guardrails are independent of the LLM's own "safety training."
 
 ### Questions for the Team:
