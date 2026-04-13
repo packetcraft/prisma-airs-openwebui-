@@ -14,6 +14,29 @@ By the end of this lab, you will:
 
 ---
 
+## 🏗️ Lab0: Building the Sandbox
+
+In this section, we set up the local infrastructure.
+
+### Step 1: Install Ollama
+Ollama is the engine that runs the models on your MacBook's hardware.
+1.  Download and install from [ollama.com](https://ollama.com).
+2.  Open your Terminal and pull the "uncensored" model (we use this to ensure the *security layer* does the work, not the model's own internal filters):
+    ```bash
+    ollama pull dolphin3:8b-llama3.1-q4_K_M
+    ```
+
+### Step 2: Deploy Open WebUI via Docker
+Open WebUI provides the chat interface and the "Functions" engine where our security code lives.
+1.  Ensure **Docker Desktop** is running.
+2.  Run the following command to start Open WebUI:
+    ```bash
+    docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
+    ```
+3.  Open `http://localhost:3000` in your browser and create your local admin account.
+
+---
+
 ## 🛠️ Lab 1: Ollama CLI & API Fundamentals
 
 Before we dive into security, let's learn how to manage the models directly from your terminal.
@@ -68,29 +91,6 @@ Ollama exposes a REST API on port `11434`. This is how Open WebUI communicates w
 
 ---
 
-## 🏗️ Lab 2: Building the Sandbox
-
-In this section, we set up the local infrastructure.
-
-### Step 1: Install Ollama
-Ollama is the engine that runs the models on your MacBook's hardware.
-1.  Download and install from [ollama.com](https://ollama.com).
-2.  Open your Terminal and pull the "uncensored" model (we use this to ensure the *security layer* does the work, not the model's own internal filters):
-    ```bash
-    ollama pull dolphin3:8b-llama3.1-q4_K_M
-    ```
-
-### Step 2: Deploy Open WebUI via Docker
-Open WebUI provides the chat interface and the "Functions" engine where our security code lives.
-1.  Ensure **Docker Desktop** is running.
-2.  Run the following command to start Open WebUI:
-    ```bash
-    docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/data --name open-webui ghcr.io/open-webui/open-webui:main
-    ```
-3.  Open `http://localhost:3000` in your browser and create your local admin account.
-
----
-
 ## 🛡️ Lab 2: Activating the Shield (Prisma AIRS)
 
 Now we add the Palo Alto Networks security layer.
@@ -98,7 +98,7 @@ Now we add the Palo Alto Networks security layer.
 ### Step 1: Install the Filter
 1.  In Open WebUI, go to **Admin Panel > Functions**.
 2.  Click **+ (New Function)**.
-3.  Copy the contents of `prisma_airs_enforcer.py` from this project and paste it into the editor.
+3.  Copy the contents of `/functions/prisma_airs_enforcer.py` from this project and paste it into the editor.
 4.  Name it `Prisma_AIRS_Enforcer` and click **Save**.
 
 ### Step 2: Configure Credentials
@@ -108,7 +108,7 @@ Now we add the Palo Alto Networks security layer.
 
 ### Step 3: Create a Monitored Model
 1.  Go to **Workspace > Models > Create a Model**.
-2.  **Name**: `Secured-Llama2`.
+2.  **Name**: `Mi Chat (Secured)`.
 3.  **Base Model**: `dolphin3:8b-llama3.1-q4_K_M`.
 4.  **Filter**: Select `Prisma_AIRS_Enforcer`.
 5.  Click **Save**.
