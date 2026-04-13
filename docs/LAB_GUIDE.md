@@ -39,9 +39,7 @@ Open your Terminal and try these commands:
     ```
 *   **Run with a System Prompt**: Force the model to adopt a specific persona.
     ```bash
-    ollama run dolphin3:8b-llama3.1-q4_K_M --system "You are a helpful assistant that speaks only in Pirate-slang" "How do I secure my server?"
-
-    ollama run dolphin3:8b-llama3.1-q4_K_M << 'EOF'
+ollama run dolphin3:8b-llama3.1-q4_K_M << 'EOF'
 /set system "You are a helpful assistant that speaks only in Pirate-slang"
 How do I secure my server?
 EOF
