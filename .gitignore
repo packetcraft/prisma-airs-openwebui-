@@ -1,4 +1,6 @@
-# --- Security / Credentials ---
+# --- Claude / Agent Settings ---
+.claude/
+
 # Never commit your actual keys or profile names
 .env
 .env.local
