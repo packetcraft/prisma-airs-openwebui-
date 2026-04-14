@@ -56,7 +56,7 @@ Start with Detector if you want to observe behavior before enforcing. Switch to 
 
 1. **Pull the Model**:
 ```bash
-ollama pull llama2-uncensored:latest
+ollama pull dolphin3:8b-llama3.1-q4_K_M
 ```
 
 2. **Launch WebUI**:
@@ -67,16 +67,18 @@ docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway \
 ```
 
 3. **Install Filter**: Copy the code from your chosen file in `functions/` into Open WebUI via **Admin Panel > Functions**.
+4. **Create Model Aliases**: In **Workspace > Models**, create aliases (`MyChat-Unprotected`, `MyChat-Enforced`, `MyChat-Detector`) pointing to the same base model with the relevant filter attached to each.
 
-**Detailed instructions can be found in the [Setup Guide](./docs/setup-guide.md).**
+**Detailed instructions and hands-on exercises are in the [Setup Guide](./docs/setup-guide.md) and [Lab Guide](./docs/LAB_GUIDE.md).**
 
 ---
 
 ## 📂 Repository Structure
 
-* `functions/`: Contains the Python middleware (Filter) for Open WebUI.
+* `functions/`: Contains the Python middleware (Filter) for Open WebUI — Detector, Enforcer, and Diagnostics variants.
 * `docs/`: Step-by-step setup guides, troubleshooting, and architecture documentation.
   * [Setup Guide](./docs/setup-guide.md) — installation and configuration walkthrough.
+  * [Lab Guide](./docs/LAB_GUIDE.md) — hands-on labs covering prompt injection, DLP, diagnostics, streaming limitations, and a capstone multi-model comparison (Labs 0–9).
   * [PRD](./docs/PRD.md) — filter architecture, request flow diagrams for all three modes, API schema notes, and the streaming obscurement limitation.
 * `samples/`: Real Prisma AIRS API JSON responses captured for development and testing reference.
 
